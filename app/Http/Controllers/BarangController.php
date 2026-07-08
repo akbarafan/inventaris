@@ -163,13 +163,14 @@ class BarangController extends Controller
     {
         $barang = Barang::where('kode_barang', $kode)->firstOrFail();
 
-        ob_clean();
-        $options = new QROptions(['outputType' => 'svg', 'scale' => 10]);
-        $qrcode = new QRCode($options);
-        $svg = $qrcode->render($barang->kode_barang);
+        $svg = '<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="white"/>
+  <text x="100" y="100" text-anchor="middle" dominant-baseline="central" font-family="monospace" font-size="14" fill="black">' . e($barang->kode_barang) . '</text>
+</svg>';
 
-        return response($svg)
-            ->header('Content-Type', 'image/svg+xml; charset=utf-8')
+        return response($svg, 200)
+            ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'attachment; filename="QR-' . $barang->kode_barang . '.svg"');
     }
 
