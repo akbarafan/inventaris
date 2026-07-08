@@ -34,7 +34,7 @@
         <div x-show="sidebarOpen" @@click="sidebarOpen = false" class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"></div>
         <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-[220px] bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto overflow-y-auto">
             <div class="flex items-center gap-2 h-14 px-4 border-b border-gray-200">
-                <img src="{{ asset('storage/media/logo-smk.png') }}" alt="Logo SMK" class="w-7 h-7 object-contain rounded-full shrink-0">
+                <img src="{{ asset('images/logo-smk.png') }}" alt="Logo SMK" class="w-7 h-7 object-contain rounded-full shrink-0">
                 <span class="text-gray-900 font-bold text-sm truncate">Inventaris SMK</span>
             </div>
             <nav class="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
