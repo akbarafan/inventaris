@@ -25,7 +25,7 @@
             <div style="text-align:center;margin-bottom:30px">
                 <img src="{{ asset('images/logo-smk.png') }}" style="width:100px;height:100px;border-radius:50%;object-fit:contain;margin:0 auto 16px;display:block;border:3px solid #E2E8F0;background:#fff;padding:4px" alt="Logo SMK">
                 <div style="font-size:26px;font-weight:800;margin-bottom:7px;color:#0F172A">Masuk ke Inventaris</div>
-                <div style="font-size:13px;color:#94A3B8">Platform alumni SMK Labschool UNESA 1 Surabaya</div>
+                <div style="font-size:13px;color:#94A3B8">Platform inventaris SMK Labschool UNESA 1 Surabaya</div>
             </div>
 
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:28px 26px">
