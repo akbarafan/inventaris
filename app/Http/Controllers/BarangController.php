@@ -6,6 +6,10 @@ use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
+use BaconQrCode\Encoder\Encoder;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -161,13 +165,13 @@ class BarangController extends Controller
     {
         $barang = Barang::where('kode_barang', $kode)->firstOrFail();
 
-        $svg = '<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <rect width="200" height="200" fill="white"/>
-  <text x="100" y="100" text-anchor="middle" dominant-baseline="central" font-family="monospace" font-size="14" fill="black">' . e($barang->kode_barang) . '</text>
-</svg>';
+        $renderer = new ImageRenderer(
+            new RendererStyle(400),
+            new SvgImageBackEnd()
+        );
+        $svg = $renderer->render(Encoder::encode($barang->kode_barang));
 
-        return response($svg, 200)
+        return response($svg->getString(), 200)
             ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'attachment; filename="QR-' . $barang->kode_barang . '.svg"');
     }
