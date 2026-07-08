@@ -6,6 +6,7 @@ use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
+use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -169,7 +170,7 @@ class BarangController extends Controller
             new RendererStyle(400),
             new SvgImageBackEnd()
         );
-        $svg = $renderer->render(Encoder::encode($barang->kode_barang));
+        $svg = $renderer->render(Encoder::encode($barang->kode_barang, new ErrorCorrectionLevel(ErrorCorrectionLevel::L)));
 
         return response($svg->getString(), 200)
             ->header('Content-Type', 'image/svg+xml')
