@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
@@ -53,8 +56,11 @@ class Barang extends Model
 
     public function generateQrSvg($size = 200)
     {
-        $options = new QROptions(['outputType' => 'svg', 'scale' => intval($size / 25)]);
-        return (new QRCode($options))->render($this->kode_barang);
+        $renderer = new ImageRenderer(
+            new RendererStyle($size),
+            new SvgImageBackEnd()
+        );
+        return $renderer->render(Encoder::encode($this->kode_barang, ErrorCorrectionLevel::L()));
     }
 
     public static function initials($nama)
