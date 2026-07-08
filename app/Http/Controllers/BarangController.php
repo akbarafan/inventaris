@@ -170,7 +170,7 @@ class BarangController extends Controller
             new RendererStyle(400),
             new SvgImageBackEnd()
         );
-        $svg = $renderer->render(Encoder::encode($barang->kode_barang, new ErrorCorrectionLevel(ErrorCorrectionLevel::L)));
+        $svg = $renderer->render(Encoder::encode($barang->kode_barang, ErrorCorrectionLevel::L()));
 
         return response($svg->getString(), 200)
             ->header('Content-Type', 'image/svg+xml')
