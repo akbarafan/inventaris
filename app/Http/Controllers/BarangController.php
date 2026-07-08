@@ -172,7 +172,7 @@ class BarangController extends Controller
         );
         $svg = $renderer->render(Encoder::encode($barang->kode_barang, ErrorCorrectionLevel::L()));
 
-        return response($svg->getString(), 200)
+        return response($svg, 200)
             ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'attachment; filename="QR-' . $barang->kode_barang . '.svg"');
     }
