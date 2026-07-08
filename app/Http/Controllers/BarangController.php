@@ -6,8 +6,6 @@ use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
