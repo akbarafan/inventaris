@@ -54,13 +54,14 @@ class Barang extends Model
         return $kode;
     }
 
-    public function generateQrSvg($size = 200)
+    public function generateQrSvg($size = 200, $public = false)
     {
+        $data = $public ? url('/b/' . $this->kode_barang) : $this->kode_barang;
         $renderer = new ImageRenderer(
             new RendererStyle($size),
             new SvgImageBackEnd()
         );
-        return $renderer->render(Encoder::encode($this->kode_barang, ErrorCorrectionLevel::L()));
+        return $renderer->render(Encoder::encode($data, ErrorCorrectionLevel::L()));
     }
 
     public static function initials($nama)

@@ -162,6 +162,14 @@ class BarangController extends Controller
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus!']);
     }
 
+    public function publicDetail($kode)
+    {
+        $barang = Barang::with('kategori', 'barangLokasis.lokasi')
+            ->where('kode_barang', $kode)
+            ->firstOrFail();
+        return view('barang.public', compact('barang'));
+    }
+
     public function downloadQR($kode)
     {
         $barang = Barang::where('kode_barang', $kode)->firstOrFail();
@@ -170,7 +178,8 @@ class BarangController extends Controller
             new RendererStyle(400),
             new SvgImageBackEnd()
         );
-        $svg = $renderer->render(Encoder::encode($barang->kode_barang, ErrorCorrectionLevel::L()));
+        $qrData = url('/b/' . $barang->kode_barang);
+        $svg = $renderer->render(Encoder::encode($qrData, ErrorCorrectionLevel::L()));
 
         return response($svg, 200)
             ->header('Content-Type', 'image/svg+xml')

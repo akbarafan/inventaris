@@ -17,7 +17,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('scan', [ScanController::class, 'index'])->name('scan.index');
-    Route::get('scan/{kode}', [ScanController::class, 'scan'])->name('scan.scan');
+    Route::get('scan/{kode}', [ScanController::class, 'scan'])->name('scan.scan')->withoutMiddleware('auth');
+
+Route::get('b/{kode}', [BarangController::class, 'publicDetail'])->name('barang.public');
 
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
 
