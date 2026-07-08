@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::resource('barang', BarangController::class)->except(['create', 'destroy']);
-    Route::get('barang/{kode}/qr', [BarangController::class, 'downloadQR'])->name('barang.qr');
+    Route::get('barang/{kode}/qr', [BarangController::class, 'downloadQR'])->name('barang.qr')->withoutMiddleware('admin');
     Route::delete('barang/{barang}', [BarangController::class, 'destroy'])->name('barang.destroy')->middleware('admin');
 
     Route::resource('kategori', KategoriController::class)->except(['show', 'edit', 'destroy']);
