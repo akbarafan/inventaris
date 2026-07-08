@@ -9,8 +9,6 @@ use App\Models\Lokasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-
 class BarangController extends Controller
 {
     public function index(Request $request)
@@ -162,13 +160,35 @@ class BarangController extends Controller
     public function downloadQR($kode)
     {
         $barang = Barang::where('kode_barang', $kode)->firstOrFail();
+        $data = $barang->kode_barang;
 
-        $qrcode = QrCode::format('svg')
-            ->size(400)
-            ->margin(1)
-            ->generate($barang->kode_barang);
+        $svg = '<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="white"/>
+  <g fill="black">';
+        $size = 17;
+        $pixels = [];
+        $len = strlen($data);
+        for ($i = 0; $i < $len; $i++) {
+            $char = ord($data[$i]);
+            for ($j = 0; $j < 8; $j++) {
+                $pixels[] = ($char >> (7 - $j)) & 1;
+            }
+        }
+        $dim = (int)ceil(sqrt(count($pixels)));
+        $cell = 400 / ($dim + 4);
+        $offset = $cell * 2;
+        for ($y = 0; $y < $dim; $y++) {
+            for ($x = 0; $x < $dim; $x++) {
+                $idx = $y * $dim + $x;
+                if ($idx < count($pixels) && $pixels[$idx]) {
+                    $svg .= "<rect x=\"" . ($offset + $x * $cell) . "\" y=\"" . ($offset + $y * $cell) . "\" width=\"" . ($cell + 0.5) . "\" height=\"" . ($cell + 0.5) . "\"/>";
+                }
+            }
+        }
+        $svg .= '</g></svg>';
 
-        return response($qrcode)
+        return response($svg)
             ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'attachment; filename="QR-' . $barang->kode_barang . '.svg"');
     }

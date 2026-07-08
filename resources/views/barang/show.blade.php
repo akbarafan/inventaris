@@ -100,7 +100,7 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center sticky top-24">
                 <h3 class="text-sm font-semibold text-gray-700 mb-4">QR Code</h3>
-                {!! QrCode::format('svg')->size(200)->margin(1)->generate($barang->kode_barang) !!}
+                {!! $barang->generateQrSvg(200) !!}
                 <p class="text-xs text-gray-400 mt-2 font-mono">{{ $barang->kode_barang }}</p>
                 <div class="mt-4 space-y-2">
                     <a href="{{ route('barang.qr', $barang->kode_barang) }}" class="btn-outline text-sm px-4 py-2 w-full block text-center">Download QR</a>

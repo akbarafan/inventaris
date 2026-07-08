@@ -1,1 +1,0 @@
-function e(e,t){let n;return function(...r){clearTimeout(n),n=setTimeout(()=>e.apply(this,r),t)}}window.debounce=e;
