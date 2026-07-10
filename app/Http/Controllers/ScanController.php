@@ -21,15 +21,18 @@ class ScanController extends Controller
             ->where('kode_barang', $kode)
             ->firstOrFail();
 
-        $scanLog = ScanLog::create([
-            'barang_id' => $barang->id,
-            'kode_barang' => $barang->kode_barang,
-            'user_id' => Auth::id(),
-            'device' => request()->userAgent(),
-            'ip_address' => request()->ip(),
-        ]);
+        if (Auth::check()) {
+            $scanLog = ScanLog::create([
+                'barang_id' => $barang->id,
+                'kode_barang' => $barang->kode_barang,
+                'user_id' => Auth::id(),
+                'device' => request()->userAgent(),
+                'ip_address' => request()->ip(),
+            ]);
+            return view('scan.result', compact('barang', 'scanLog'));
+        }
 
-        return view('scan.result', compact('barang', 'scanLog'));
+        return redirect(url('/b/' . $barang->kode_barang));
     }
 
 }

@@ -155,7 +155,9 @@
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 if (code) {
                     var d = code.data;
-                    window.location.href = d.charAt(0) === '/' ? d : '/scan/' + encodeURIComponent(d);
+                    var parts = d.split('/');
+                    var kode = parts[parts.length - 1];
+                    window.location.href = '/scan/' + encodeURIComponent(kode);
                     return;
                 }
             }
@@ -191,7 +193,9 @@
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 if (code) {
                     var d = code.data;
-                    window.location.href = d.charAt(0) === '/' ? d : '/scan/' + encodeURIComponent(d);
+                    var parts = d.split('/');
+                    var kode = parts[parts.length - 1];
+                    window.location.href = '/scan/' + encodeURIComponent(kode);
                 } else {
                     document.getElementById('imageResult').textContent = 'Tidak dapat membaca QR code dari gambar ini';
                     document.getElementById('imageResult').classList = 'text-sm text-center text-red-500';
