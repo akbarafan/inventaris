@@ -1,0 +1,24 @@
+{
+    "name": "Inventaris SMK",
+    "short_name": "Inventaris",
+    "description": "Sistem Informasi Inventaris Sekolah",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F8FAFF",
+    "theme_color": "#2563EB",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/images/logo-smk.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/images/logo-smk.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
