@@ -1,4 +1,4 @@
-const CACHE = 'inventaris-v1';
+const CACHE = 'inventaris-v2';
 
 self.addEventListener('install', e => {
     e.waitUntil(
@@ -6,6 +6,14 @@ self.addEventListener('install', e => {
             '/images/logo-smk.png',
             '/manifest.json',
         ]))
+    );
+});
+
+self.addEventListener('activate', e => {
+    e.waitUntil(
+        caches.keys().then(keys => Promise.all(
+            keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+        ))
     );
 });
 
