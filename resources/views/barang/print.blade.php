@@ -59,15 +59,15 @@
         }
         .asset-section {
             display: flex;
-            flex-direction: column;
-            gap: 2px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             margin-bottom: 4px;
             padding: 2px 0;
         }
         .asset-id-area {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
+            flex: 1;
+            min-width: 0;
         }
         .asset-id-label {
             font-size: 7px;
@@ -83,21 +83,26 @@
             font-family: monospace;
             letter-spacing: 0.02em;
         }
-        .barcode-full {
+        .barcode-box {
+            flex-shrink: 0;
             text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 3px 6px;
+            background: #fff;
         }
         .barcode {
             font-family: 'Libre Barcode 39', cursive;
-            font-size: 52px;
+            font-size: 28px;
             line-height: 1;
             color: #0f172a;
-            margin-bottom: -4px;
+            margin-bottom: -2px;
         }
         .barcode-type {
-            font-size: 6px;
+            font-size: 5px;
             color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.05em;
         }
         .details-section {
             display: flex;
@@ -202,10 +207,10 @@
 
         <div class="asset-section">
             <div class="asset-id-area">
-                <span class="asset-id-label">ID ASET</span>
-                <span class="asset-id-value">{{ $barang->kode_barang }}</span>
+                <div class="asset-id-label">ID ASET</div>
+                <div class="asset-id-value">{{ $barang->kode_barang }}</div>
             </div>
-            <div class="barcode-full">
+            <div class="barcode-box">
                 <div class="barcode">*{{ $barang->kode_barang }}*</div>
                 <div class="barcode-type">Code 39</div>
             </div>
