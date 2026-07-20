@@ -10,6 +10,10 @@
             <p class="text-sm text-gray-500 mt-1">Kelola seluruh data barang inventaris</p>
         </div>
         <div class="flex items-center gap-2">
+            <button onclick="cetakTerpilih()" class="btn-outline text-sm px-4 py-2">
+                <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14h12v6H6z"/></svg>
+                Cetak Terpilih
+            </button>
             @if(Auth::user()->isAdmin())
             <button onclick="openModal('importModal')" class="btn-outline text-sm px-4 py-2">
                 <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m0 0l-3-3m3 3l3-3"/></svg>
@@ -45,6 +49,7 @@
             <table id="barangTable" class="w-full text-sm">
                 <thead>
                     <tr class="bg-gray-50 text-gray-600 text-left">
+                        <th class="px-4 py-3 font-medium w-10"><input type="checkbox" id="checkAll" onchange="toggleAllCheckbox(this)"></th>
                         <th class="px-4 py-3 font-medium w-12">No</th>
                         <th class="px-4 py-3 font-medium">Kode</th>
                         <th class="px-4 py-3 font-medium">Nama Barang</th>
@@ -60,6 +65,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @foreach($barangs as $b)
                     <tr class="hover:bg-gray-50 transition-colors" data-id="{{ $b->id }}">
+                        <td class="px-4 py-3"><input type="checkbox" class="cb-barang" value="{{ $b->kode_barang }}"></td>
                         <td class="px-4 py-3 text-gray-500">{{ $loop->iteration }}</td>
                         <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ $b->kode_barang }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800">{{ $b->nama_barang }}</td>
@@ -448,6 +454,10 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 16a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm10-1a1 1 0 00-1 1v1h-1a1 1 0 000 2h1v1a1 1 0 002 0v-1h1a1 1 0 000-2h-1v-1a1 1 0 00-1-1z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13v4m-2-2h4"/></svg>
                             Download QR
                         </a>
+                        <a href="/barang/print-label?kodes=${data.kode_barang}" target="_blank" class="btn-outline text-sm px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14h12v6H6z"/></svg>
+                            Cetak Label
+                        </a>
                     </div>
                     <div class="flex-1 min-w-0 space-y-4">
                         <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -646,6 +656,17 @@
         .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal import'); });
     });
 
+    function toggleAllCheckbox(src) {
+        document.querySelectorAll('.cb-barang').forEach(cb => cb.checked = src.checked);
+    }
+
+    function cetakTerpilih() {
+        const codes = [];
+        document.querySelectorAll('.cb-barang:checked').forEach(cb => codes.push(cb.value));
+        if (codes.length === 0) { alert('Pilih barang terlebih dahulu.'); return; }
+        window.open('/barang/print-label?kodes=' + codes.join(','), '_blank');
+    }
+
     function openModal(id) {
         if (id === 'barangModal' && !editingId) resetBarangForm();
         document.getElementById(id).classList.remove('hidden');
@@ -666,7 +687,7 @@
             paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
         },
         order: [[2, 'asc']],
-        columnDefs: [{ orderable: false, targets: [0, 9] }],
+        columnDefs: [{ orderable: false, targets: [0, 10] }],
     });
 
     document.getElementById('filterKategori')?.addEventListener('change', function() {

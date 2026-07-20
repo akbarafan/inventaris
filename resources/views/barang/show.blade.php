@@ -104,6 +104,7 @@
                 <p class="text-xs text-gray-400 mt-2 font-mono">{{ $barang->kode_barang }}</p>
                 <div class="mt-4 space-y-2">
                     <a href="{{ route('barang.qr', $barang->kode_barang) }}" class="btn-outline text-sm px-4 py-2 w-full block text-center">Download QR</a>
+                    <a href="{{ route('barang.print-label', ['kodes' => $barang->kode_barang]) }}" target="_blank" class="btn-outline text-sm px-4 py-2 w-full block text-center">Cetak Label</a>
                     <a href="{{ route('barang.edit', $barang->id) }}" class="btn-primary text-sm px-4 py-2 w-full block text-center">Edit Barang</a>
                 </div>
             </div>

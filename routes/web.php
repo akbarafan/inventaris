@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
         Route::get('laporan/export-barang', [LaporanController::class, 'exportBarang'])->name('laporan.export.barang');
     });
 
+    Route::get('barang/print-label', [BarangController::class, 'printLabel'])->name('barang.print-label');
     Route::resource('barang', BarangController::class)->except(['create', 'destroy']);
     Route::get('barang/{kode}/qr', [BarangController::class, 'downloadQR'])->name('barang.qr')->withoutMiddleware('admin');
     Route::delete('barang/{barang}', [BarangController::class, 'destroy'])->name('barang.destroy')->middleware('admin');
