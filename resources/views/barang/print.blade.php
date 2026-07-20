@@ -14,10 +14,10 @@
         }
         .label-card {
             width: 100mm;
-            min-height: 50mm;
+            min-height: 55mm;
             border: 1.5px solid #0f172a;
             border-radius: 6px;
-            padding: 6px 8px;
+            padding: 10px 12px;
             margin: 0 auto 8px;
             page-break-after: always;
             display: flex;
@@ -27,14 +27,14 @@
         .header {
             display: flex;
             align-items: center;
-            gap: 6px;
-            border-bottom: 1px solid #0f172a;
-            padding-bottom: 4px;
-            margin-bottom: 4px;
+            gap: 8px;
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
         }
         .header img {
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             object-fit: contain;
             flex-shrink: 0;
@@ -43,40 +43,41 @@
             flex: 1;
         }
         .header-text .school {
-            font-size: 8px;
+            font-size: 11px;
             font-weight: 800;
             color: #0f172a;
-            line-height: 1.1;
+            line-height: 1.2;
             text-transform: uppercase;
             letter-spacing: 0.02em;
         }
         .header-text .title {
-            font-size: 7px;
-            font-weight: 600;
+            font-size: 9px;
+            font-weight: 700;
             color: #2563eb;
-            line-height: 1.1;
+            line-height: 1.2;
             letter-spacing: 0.05em;
         }
         .asset-section {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 4px;
+            padding: 2px 0;
         }
         .asset-id-area {
             flex: 1;
             min-width: 0;
         }
         .asset-id-label {
-            font-size: 6px;
+            font-size: 8px;
             font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
         .asset-id-value {
-            font-size: 11px;
+            font-size: 15px;
             font-weight: 800;
             color: #0f172a;
             font-family: monospace;
@@ -88,40 +89,42 @@
         }
         .barcode {
             font-family: 'Libre Barcode 39', cursive;
-            font-size: 28px;
+            font-size: 44px;
             line-height: 1;
             color: #0f172a;
-            margin-bottom: -4px;
+            margin-bottom: -6px;
         }
         .barcode-type {
-            font-size: 5px;
+            font-size: 7px;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.1em;
         }
         .details-section {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex: 1;
-            border-top: 1px solid #0f172a;
-            padding-top: 4px;
+            border-top: 1.5px solid #0f172a;
+            padding-top: 6px;
+            margin-top: auto;
         }
         .metadata {
             flex: 1;
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 3px;
+            justify-content: center;
         }
         .metadata .row {
             display: flex;
-            font-size: 6.5px;
-            line-height: 1.2;
+            font-size: 9px;
+            line-height: 1.3;
         }
         .metadata .row .lbl {
             font-weight: 700;
             color: #64748b;
-            min-width: 48px;
+            min-width: 60px;
             flex-shrink: 0;
         }
         .metadata .row .val {
@@ -131,8 +134,8 @@
         }
         .status-dot {
             display: inline-block;
-            width: 5px;
-            height: 5px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             margin-right: 2px;
             vertical-align: middle;
@@ -143,19 +146,23 @@
         .qr-wrap {
             flex-shrink: 0;
             text-align: center;
-            width: 48px;
+            width: 62px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .qr-wrap svg {
-            width: 44px;
-            height: 44px;
+            width: 56px;
+            height: 56px;
             display: block;
         }
         .qr-text {
-            font-size: 4.5px;
+            font-size: 6px;
             font-weight: 700;
             color: #2563eb;
             letter-spacing: 0.05em;
-            margin-top: 1px;
+            margin-top: 2px;
         }
         @media print {
             body { padding: 0; }
@@ -168,7 +175,7 @@
             .label-card:last-child { page-break-after: avoid; }
         }
         @page {
-            size: 100mm 50mm;
+            size: 100mm 55mm;
             margin: 0;
         }
     </style>
