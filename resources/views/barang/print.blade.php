@@ -145,6 +145,8 @@
             border-radius: 50%;
             margin-right: 2px;
             vertical-align: middle;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         .status-dot.green { background: #22c55e; }
         .status-dot.orange { background: #f59e0b; }
@@ -172,6 +174,7 @@
         }
         @media print {
             body { padding: 0; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .label-card {
                 border: 1.5px solid #0f172a;
                 margin: 0 auto;
