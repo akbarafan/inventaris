@@ -123,15 +123,21 @@
         }
         .metadata .row .lbl {
             font-weight: 700;
-            color: #64748b;
-            width: 75px;
+            color: #0f172a;
+            width: 82px;
             flex-shrink: 0;
-            text-align: right;
+        }
+        .metadata .row .dots {
+            color: #0f172a;
+            width: 10px;
+            flex-shrink: 0;
+            text-align: center;
         }
         .metadata .row .val {
             font-weight: 600;
             color: #0f172a;
             word-break: break-all;
+            flex: 1;
         }
         .status-dot {
             display: inline-block;
@@ -206,19 +212,23 @@
         <div class="details-section">
             <div class="metadata">
                 <div class="row">
-                    <span class="lbl">NAMA :</span>
+                    <span class="lbl">NAMA</span>
+                    <span class="dots">:</span>
                     <span class="val">{{ strtoupper($barang->nama_barang) }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">LOKASI :</span>
+                    <span class="lbl">LOKASI</span>
+                    <span class="dots">:</span>
                     <span class="val">{{ strtoupper($barang->barangLokasis->first()->lokasi->nama_lokasi ?? $barang->lokasi->nama_lokasi ?? '-') }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">TGL PEROLEHAN :</span>
+                    <span class="lbl">TGL PEROLEHAN</span>
+                    <span class="dots">:</span>
                     <span class="val">{{ $barang->tanggal_masuk ? strtoupper(\Carbon\Carbon::parse($barang->tanggal_masuk)->locale('id')->isoFormat('D MMM Y')) : '-' }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">KONDISI :</span>
+                    <span class="lbl">KONDISI</span>
+                    <span class="dots">:</span>
                     <span class="val">
                         @if($barang->baik > 0)
                             <span class="status-dot green"></span> BAIK
