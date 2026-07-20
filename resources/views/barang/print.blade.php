@@ -59,44 +59,42 @@
         }
         .asset-section {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
+            flex-direction: column;
+            gap: 2px;
             margin-bottom: 4px;
             padding: 2px 0;
         }
         .asset-id-area {
-            flex: 1;
-            min-width: 0;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
         }
         .asset-id-label {
-            font-size: 8px;
+            font-size: 7px;
             font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
         .asset-id-value {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 800;
             color: #0f172a;
             font-family: monospace;
             letter-spacing: 0.02em;
         }
-        .barcode-wrap {
-            flex-shrink: 0;
-            text-align: right;
+        .barcode-full {
+            text-align: center;
         }
         .barcode {
             font-family: 'Libre Barcode 39', cursive;
-            font-size: 52px;
+            font-size: 36px;
             line-height: 1;
             color: #0f172a;
-            margin-bottom: -6px;
-            white-space: nowrap;
+            margin-bottom: -4px;
         }
         .barcode-type {
-            font-size: 7px;
+            font-size: 6px;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.1em;
@@ -201,10 +199,10 @@
 
         <div class="asset-section">
             <div class="asset-id-area">
-                <div class="asset-id-label">ID ASET</div>
-                <div class="asset-id-value">{{ $barang->kode_barang }}</div>
+                <span class="asset-id-label">ID ASET</span>
+                <span class="asset-id-value">{{ $barang->kode_barang }}</span>
             </div>
-            <div class="barcode-wrap">
+            <div class="barcode-full">
                 <div class="barcode">*{{ $barang->kode_barang }}*</div>
                 <div class="barcode-type">Code 39</div>
             </div>
