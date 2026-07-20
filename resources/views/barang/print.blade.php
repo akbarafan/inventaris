@@ -13,8 +13,8 @@
             padding: 10px;
         }
         .label-card {
-            width: 100mm;
-            min-height: 55mm;
+            width: 75mm;
+            min-height: 60mm;
             border: 1.5px solid #0f172a;
             border-radius: 6px;
             padding: 10px 12px;
@@ -124,8 +124,9 @@
         .metadata .row .lbl {
             font-weight: 700;
             color: #64748b;
-            min-width: 60px;
+            width: 75px;
             flex-shrink: 0;
+            text-align: right;
         }
         .metadata .row .val {
             font-weight: 600;
@@ -175,7 +176,7 @@
             .label-card:last-child { page-break-after: avoid; }
         }
         @page {
-            size: 100mm 55mm;
+            size: 75mm 60mm;
             margin: 0;
         }
     </style>
@@ -205,20 +206,20 @@
         <div class="details-section">
             <div class="metadata">
                 <div class="row">
-                    <span class="lbl">NAMA</span>
-                    <span class="val">: {{ strtoupper($barang->nama_barang) }}</span>
+                    <span class="lbl">NAMA :</span>
+                    <span class="val">{{ strtoupper($barang->nama_barang) }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">LOKASI</span>
-                    <span class="val">: {{ strtoupper($barang->barangLokasis->first()->lokasi->nama_lokasi ?? $barang->lokasi->nama_lokasi ?? '-') }}</span>
+                    <span class="lbl">LOKASI :</span>
+                    <span class="val">{{ strtoupper($barang->barangLokasis->first()->lokasi->nama_lokasi ?? $barang->lokasi->nama_lokasi ?? '-') }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">TGL PEROLEHAN</span>
-                    <span class="val">: {{ $barang->tanggal_masuk ? strtoupper(\Carbon\Carbon::parse($barang->tanggal_masuk)->locale('id')->isoFormat('D MMM Y')) : '-' }}</span>
+                    <span class="lbl">TGL PEROLEHAN :</span>
+                    <span class="val">{{ $barang->tanggal_masuk ? strtoupper(\Carbon\Carbon::parse($barang->tanggal_masuk)->locale('id')->isoFormat('D MMM Y')) : '-' }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">KONDISI</span>
-                    <span class="val">:
+                    <span class="lbl">KONDISI :</span>
+                    <span class="val">
                         @if($barang->baik > 0)
                             <span class="status-dot green"></span> BAIK
                         @elseif($barang->rusak > 0)
