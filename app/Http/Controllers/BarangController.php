@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Tests\Feature\Status;
+use App\Library\Status;
 use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;

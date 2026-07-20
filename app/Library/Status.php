@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Library;
 
 use Illuminate\Support\Facades\DB;
 
