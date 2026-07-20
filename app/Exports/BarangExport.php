@@ -76,7 +76,7 @@ class BarangExport implements FromCollection, WithHeadings, WithMapping, WithSty
 
     public function getUptime()
     {
-        $out = @shell_exec('net stats workstation 2>NUL');
+        $out = @\shell_exec('net stats workstation 2>NUL');
         if ($out && preg_match('/Statistics since\s+(.+)/', $out, $m)) {
             $ts = strtotime(trim($m[1]));
             if ($ts) return $this->_diff(time() - $ts);
