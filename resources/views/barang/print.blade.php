@@ -89,10 +89,11 @@
         }
         .barcode {
             font-family: 'Libre Barcode 39', cursive;
-            font-size: 44px;
+            font-size: 52px;
             line-height: 1;
             color: #0f172a;
             margin-bottom: -6px;
+            white-space: nowrap;
         }
         .barcode-type {
             font-size: 7px;
