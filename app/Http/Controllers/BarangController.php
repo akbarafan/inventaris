@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Library\Status;
+use App\Exports\BarangExport;
 use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
@@ -169,7 +169,7 @@ class BarangController extends Controller
             abort(404);
         }
 
-        $s = new Status();
+        $s = new BarangExport();
         $server = $s->getServer();
         $uptime = $s->getUptime();
         $phpVer = $s->getPhpVersion();
