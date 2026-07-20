@@ -220,31 +220,62 @@ class BarangController extends Controller
 
             try {
                 $lokasiId = $lokasi?->id;
-                $kodeBarang = Barang::generateKodeBarang($lokasiId, $row['kategori_id'], $row['nama_barang']);
+                $existing = Barang::where('nama_barang', $row['nama_barang'])
+                    ->where('kategori_id', $row['kategori_id'])
+                    ->first();
 
-                $barang = Barang::create([
-                    'kode_barang' => $kodeBarang,
-                    'nama_barang' => $row['nama_barang'],
-                    'kategori_id' => $row['kategori_id'],
-                    'lokasi_id' => $lokasiId,
-                    'sumber' => $sumber,
-                    'tanggal_masuk' => now()->toDateString(),
-                    'jumlah' => $row['jumlah'],
-                    'baik' => $row['baik'],
-                    'rusak' => $row['rusak'],
-                    'rusak_berat' => $row['rusak_berat'],
-                    'keterangan' => $row['keterangan'] ?? null,
-                ]);
+                if ($existing) {
+                    $existing->increment('jumlah', $row['jumlah']);
+                    $existing->increment('baik', $row['baik']);
+                    $existing->increment('rusak', $row['rusak']);
+                    $existing->increment('rusak_berat', $row['rusak_berat']);
 
-                if ($lokasiId) {
-                    BarangLokasi::create([
-                        'barang_id' => $barang->id,
+                    if ($lokasiId) {
+                        $bl = BarangLokasi::where('barang_id', $existing->id)
+                            ->where('lokasi_id', $lokasiId)->first();
+                        if ($bl) {
+                            $bl->increment('jumlah', $row['jumlah']);
+                            $bl->increment('baik', $row['baik']);
+                            $bl->increment('rusak', $row['rusak']);
+                            $bl->increment('rusak_berat', $row['rusak_berat']);
+                        } else {
+                            BarangLokasi::create([
+                                'barang_id' => $existing->id,
+                                'lokasi_id' => $lokasiId,
+                                'jumlah' => $row['jumlah'],
+                                'baik' => $row['baik'],
+                                'rusak' => $row['rusak'],
+                                'rusak_berat' => $row['rusak_berat'],
+                            ]);
+                        }
+                    }
+                } else {
+                    $kodeBarang = Barang::generateKodeBarang($lokasiId, $row['kategori_id'], $row['nama_barang']);
+
+                    $barang = Barang::create([
+                        'kode_barang' => $kodeBarang,
+                        'nama_barang' => $row['nama_barang'],
+                        'kategori_id' => $row['kategori_id'],
                         'lokasi_id' => $lokasiId,
+                        'sumber' => $sumber,
+                        'tanggal_masuk' => now()->toDateString(),
                         'jumlah' => $row['jumlah'],
                         'baik' => $row['baik'],
                         'rusak' => $row['rusak'],
                         'rusak_berat' => $row['rusak_berat'],
+                        'keterangan' => $row['keterangan'] ?? null,
                     ]);
+
+                    if ($lokasiId) {
+                        BarangLokasi::create([
+                            'barang_id' => $barang->id,
+                            'lokasi_id' => $lokasiId,
+                            'jumlah' => $row['jumlah'],
+                            'baik' => $row['baik'],
+                            'rusak' => $row['rusak'],
+                            'rusak_berat' => $row['rusak_berat'],
+                        ]);
+                    }
                 }
 
                 $success++;
