@@ -275,8 +275,12 @@
                         <tr class="text-gray-600 text-left">
                             <th class="px-3 py-2 font-medium w-10">No</th>
                             <th class="px-3 py-2 font-medium">Nama Barang</th>
-                            <th class="px-3 py-2 font-medium w-48">Kategori</th>
-                            <th class="px-3 py-2 font-medium w-20 text-center">Aksi</th>
+                            <th class="px-3 py-2 font-medium w-16 text-center">Jumlah</th>
+                            <th class="px-3 py-2 font-medium w-16 text-center">Baik</th>
+                            <th class="px-3 py-2 font-medium w-16 text-center">Rusak</th>
+                            <th class="px-3 py-2 font-medium w-20 text-center">Rusak Berat</th>
+                            <th class="px-3 py-2 font-medium w-40">Kategori</th>
+                            <th class="px-3 py-2 font-medium w-12 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="importPreviewBody" class="divide-y divide-gray-100">
@@ -558,12 +562,17 @@
                 const no = cols[1] ?? '';
                 if (!isNaN(parseFloat(no)) && cols[2] && cols[2].trim()) {
                     const jml = parseInt(cols[3]) || 1;
+                    const b = parseInt(cols[4]) || 0;
+                    const rs = parseInt(cols[5]) || 0;
+                    const rb = parseInt(cols[6]) || 0;
+                    let baik = b, rusak = rs, rusakBerat = rb;
+                    if (b + rs + rb === 0) baik = jml;
                     rows.push({
                         nama: cols[2].trim(),
                         jumlah: jml,
-                        baik: (cols[4] && cols[4].trim()) ? jml : 0,
-                        rusak: (cols[5] && cols[5].trim()) ? jml : 0,
-                        rusakBerat: (cols[6] && cols[6].trim()) ? jml : 0,
+                        baik,
+                        rusak,
+                        rusakBerat,
                         keterangan: cols[7] ?? '',
                     });
                 }
@@ -582,9 +591,20 @@
                 const katOpts = kategoris.map(k =>
                     `<option value="${k.id}" ${k.id == defaultKat ? 'selected' : ''}>${k.nama_kategori}</option>`
                 ).join('');
+                const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
+                const mismatch = total !== r.jumlah;
+                const jmlCell = mismatch
+                    ? `<span class="inline-flex items-center gap-1 text-red-600 font-semibold" title="Baik+Rusak+Rusak Berat (${total}) tidak sama dengan Jumlah (${r.jumlah})">${r.jumlah}
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.702c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                      </span>`
+                    : `<span class="font-semibold">${r.jumlah}</span>`;
                 return `<tr>
                     <td class="px-3 py-2 text-gray-500 text-center">${i + 1}</td>
                     <td class="px-3 py-2 font-medium text-gray-800">${r.nama}</td>
+                    <td class="px-3 py-2 text-center">${jmlCell}</td>
+                    <td class="px-3 py-2 text-center"><span class="badge-baik">${r.baik || 0}</span></td>
+                    <td class="px-3 py-2 text-center"><span class="badge-rusak">${r.rusak || 0}</span></td>
+                    <td class="px-3 py-2 text-center"><span class="badge-rusakberat">${r.rusakBerat || 0}</span></td>
                     <td class="px-3 py-2">
                         <select class="import-kategori form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
                             <option value="">Pilih</option>
@@ -692,12 +712,12 @@
 
     document.getElementById('filterKategori')?.addEventListener('change', function() {
         const text = this.options[this.selectedIndex]?.text || '';
-        dt.column(3).search(this.value ? text : '').draw();
+        dt.column(4).search(this.value ? text : '').draw();
     });
 
     document.getElementById('filterLokasi')?.addEventListener('change', function() {
         const text = this.options[this.selectedIndex]?.text || '';
-        dt.column(4).search(this.value ? text : '').draw();
+        dt.column(5).search(this.value ? text : '').draw();
     });
 </script>
 @endpush

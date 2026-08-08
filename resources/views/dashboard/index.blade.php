@@ -10,7 +10,7 @@
         </div>
 
         {{-- Summary Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -130,31 +130,64 @@
         {{-- Chart Area --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <h3 class="font-semibold text-gray-800 mb-4">Aktivitas Scan 7 Hari Terakhir</h3>
-            <div class="flex items-end gap-2 h-40">
-                @php
-                    $days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                    $maxVal = max($chartData) ?: 1;
-                @endphp
-                @foreach($days as $i => $day)
-                    @php
-                        $val = $chartData[$i] ?? 0;
-                        $height = ($val / $maxVal) * 100;
-                        $h = max($height, 4);
-                    @endphp
-                    <div class="flex-1 flex flex-col items-center gap-1">
-                        <span class="text-xs text-gray-500 font-medium">{{ $val }}</span>
-                        <div class="w-full bg-blue-100 rounded-t-lg relative" style="height: 160px;">
-                            <div class="absolute bottom-0 w-full bg-blue-500 rounded-t-lg transition-all duration-500 hover:bg-blue-600" style="height: {{ $h }}%;"></div>
-                        </div>
-                        <span class="text-xs text-gray-500">{{ $day }}</span>
-                    </div>
-                @endforeach
+            <div class="relative h-64 sm:h-72">
+                <canvas id="scanChart"></canvas>
             </div>
         </div>
     </div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    @php
+        $chartLabels = [];
+        for ($i = 6; $i >= 0; $i--) $chartLabels[] = now()->subDays($i)->translatedFormat('D');
+    @endphp
+    const scanCtx = document.getElementById('scanChart');
+    if (scanCtx) {
+        new Chart(scanCtx, {
+            type: 'bar',
+            data: {
+                labels: @json($chartLabels),
+                datasets: [{
+                    label: 'Jumlah Scan',
+                    data: @json($chartData),
+                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    hoverBackgroundColor: 'rgba(29, 78, 216, 1)',
+                    borderRadius: 8,
+                    maxBarThickness: 56,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: { label: (c) => ' ' + c.parsed.y + ' scan' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, color: '#6b7280', font: { size: 12 } },
+                        grid: { color: '#f1f5f9' },
+                        border: { display: false }
+                    },
+                    x: {
+                        ticks: { color: '#6b7280', font: { size: 12 } },
+                        grid: { display: false },
+                        border: { display: false }
+                    }
+                },
+            }
+        });
+    }
+</script>
 <script>
     new DataTable('#barangTerbaruTable', {
         paging: false,
