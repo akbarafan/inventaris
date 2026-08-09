@@ -1,16 +1,19 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ScanController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
@@ -24,6 +27,23 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::post('barang/import-csv', [BarangController::class, 'importCsv'])->name('barang.import');
         Route::get('laporan/export-barang', [LaporanController::class, 'exportBarang'])->name('laporan.export.barang');
+        Route::get('barang/sampah', [BarangController::class, 'trash'])->name('barang.trash');
+        Route::post('barang/{id}/restore', [BarangController::class, 'restore'])->name('barang.restore');
+        Route::delete('barang/{id}/force-delete', [BarangController::class, 'forceDestroy'])->name('barang.force-delete');
+
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
+        Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+
+        Route::post('barang/{barang}/mutasi', [BarangController::class, 'mutasi'])->name('barang.mutasi');
     });
 
     Route::get('barang/print-label', [BarangController::class, 'printLabel'])->name('barang.print-label');

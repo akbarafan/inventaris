@@ -9,7 +9,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/images/logo-smk.png">
-    <title>Masuk – Inventaris SMK</title>
+    <title>Masuk – {{ $settings['nama_sekolah'] ?? 'Inventaris Sekolah' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite('resources/css/app.css')
     <style>
@@ -20,17 +20,18 @@
 
     <nav style="background:#fff;border-bottom:1px solid #E2E8F0;padding:0 16px;height:52px;display:flex;align-items:center;gap:10px">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
-            <img src="{{ asset('images/logo-smk.png') }}" style="width:30px;height:30px;border-radius:50%;object-fit:contain;flex-shrink:0" alt="Logo SMK">
-            <span style="font-weight:800;font-size:13px;color:#0F172A;white-space:nowrap">Inventaris SMK</span>
+            @php $brandLogo = $settings['logo'] ?? ''; @endphp
+            <img src="{{ $brandLogo ? asset('storage/' . $brandLogo) : asset('images/logo-smk.png') }}" style="width:30px;height:30px;border-radius:50%;object-fit:contain;flex-shrink:0" alt="Logo Sekolah">
+            <span style="font-weight:800;font-size:13px;color:#0F172A;white-space:nowrap">{{ $settings['nama_sekolah'] ?? 'Inventaris Sekolah' }}</span>
         </div>
     </nav>
 
     <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px">
         <div style="width:100%;max-width:400px">
             <div style="text-align:center;margin-bottom:30px">
-                <img src="{{ asset('images/logo-smk.png') }}" style="width:100px;height:100px;border-radius:50%;object-fit:contain;margin:0 auto 16px;display:block;border:3px solid #E2E8F0;background:#fff;padding:4px" alt="Logo SMK">
-                <div style="font-size:26px;font-weight:800;margin-bottom:7px;color:#0F172A">Masuk ke Inventaris</div>
-                <div style="font-size:13px;color:#94A3B8">Platform inventaris SMK Labschool UNESA 1 Surabaya</div>
+                <img src="{{ $brandLogo ? asset('storage/' . $brandLogo) : asset('images/logo-smk.png') }}" style="width:100px;height:100px;border-radius:50%;object-fit:contain;margin:0 auto 16px;display:block;border:3px solid #E2E8F0;background:#fff;padding:4px" alt="Logo Sekolah">
+                <div style="font-size:26px;font-weight:800;margin-bottom:7px;color:#0F172A">Masuk ke Sistem Inventaris</div>
+                <div style="font-size:13px;color:#94A3B8">{{ $settings['nama_sekolah'] ?? 'Inventaris Sekolah' }}</div>
             </div>
 
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:28px 26px">

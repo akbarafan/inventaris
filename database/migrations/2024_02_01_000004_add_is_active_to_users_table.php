@@ -8,16 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('kategoris', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_kategori');
-            $table->string('kode', 10)->nullable();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_active')->default(true)->after('role');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('kategoris');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('is_active');
+        });
     }
 };

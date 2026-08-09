@@ -19,6 +19,10 @@
                 <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m0 0l-3-3m3 3l3-3"/></svg>
                 Import CSV
             </button>
+            <a href="{{ url('/barang/sampah') }}" class="btn-outline text-sm px-4 py-2">
+                <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M8 5V3h8v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V5"/></svg>
+                Sampah
+            </a>
             @endif
             <button onclick="openModal('barangModal')" class="btn-primary text-sm px-4 py-2">
                 <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -87,6 +91,9 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 @if(Auth::user()->isAdmin())
+                                <button onclick="openMutasi({{ $b->id }})" class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Mutasi / Pindah Lokasi">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 6l-2 2m2-2l2 2m14 10H4m16 0l-2 2m2-2l-2-2M9 3v6m0 0L7 7m2 2l2-2m4 5v6m0 0l-2-2m2 2l2-2"/></svg>
+                                </button>
                                 <button onclick="hapusBarang({{ $b->id }})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
@@ -292,6 +299,60 @@
                 <button type="button" id="importBtn" class="btn-primary text-sm px-4 py-2">Import</button>
             </div>
         </div>
+    </div>
+</div>
+
+{{-- Modal Mutasi Barang --}}
+<div id="mutasiModal" class="modal-overlay hidden">
+    <div class="modal-content max-w-lg">
+        <div class="flex items-center justify-between p-5 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800">Mutasi Barang</h3>
+            <button onclick="closeModal('mutasiModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="mutasiForm" class="p-5 space-y-4">
+            <input type="hidden" id="mutasiBarangId">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Barang</label>
+                <p id="mutasiNamaBarang" class="text-sm font-semibold text-gray-800"></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Tujuan</label>
+                <select id="mutasiLokasiTujuan" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Pilih Lokasi</option>
+                    @foreach($lokasis ?? [] as $l)
+                    <option value="{{ $l->id }}">{{ $l->nama_lokasi }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Mutasi</label>
+                <input type="number" id="mutasiJumlah" required min="1" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Baik</label>
+                    <input type="number" id="mutasiBaik" min="0" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rusak</label>
+                    <input type="number" id="mutasiRusak" min="0" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rusak Berat</label>
+                    <input type="number" id="mutasiRusakBerat" min="0" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                <input type="text" id="mutasiKeterangan" maxlength="255" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('mutasiModal')" class="btn-secondary text-sm px-4 py-2">Batal</button>
+                <button type="submit" class="btn-primary text-sm px-4 py-2">Simpan Mutasi</button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
@@ -694,6 +755,48 @@
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
     }
+
+    function openMutasi(id) {
+        fetch('/barang/' + id + '/edit', { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(b => {
+                document.getElementById('mutasiBarangId').value = b.id;
+                document.getElementById('mutasiNamaBarang').textContent = b.nama_barang + '  •  ' + b.kode_barang;
+                document.getElementById('mutasiJumlah').value = b.jumlah;
+                document.getElementById('mutasiBaik').value = b.baik || 0;
+                document.getElementById('mutasiRusak').value = b.rusak || 0;
+                document.getElementById('mutasiRusakBerat').value = b.rusak_berat || 0;
+                document.getElementById('mutasiKeterangan').value = '';
+                document.getElementById('mutasiLokasiTujuan').value = '';
+                openModal('mutasiModal');
+            });
+    }
+
+    document.getElementById('mutasiForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('mutasiBarangId').value;
+        fetch('/barang/' + id + '/mutasi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                lokasi_tujuan: document.getElementById('mutasiLokasiTujuan').value,
+                jumlah: parseInt(document.getElementById('mutasiJumlah').value) || 0,
+                baik: parseInt(document.getElementById('mutasiBaik').value) || 0,
+                rusak: parseInt(document.getElementById('mutasiRusak').value) || 0,
+                rusak_berat: parseInt(document.getElementById('mutasiRusakBerat').value) || 0,
+                keterangan: document.getElementById('mutasiKeterangan').value,
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) { alert('Mutasi berhasil!'); location.reload(); }
+            else alert(res.message || 'Gagal melakukan mutasi');
+        });
+    });
 
     const dt = new DataTable('#barangTable', {
         language: {

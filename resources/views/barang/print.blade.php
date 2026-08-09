@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Label - Inventaris SMK</title>
+    <title>Cetak Label - Inventaris</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Libre+Barcode+39&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -198,10 +198,11 @@
     @foreach($barangs as $barang)
     <div class="label-card">
         <div class="header">
-            <img src="{{ asset('images/logo-smk.png') }}" alt="Logo">
+            @php $brandLogo = $settings['logo'] ?? ''; @endphp
+            <img src="{{ $brandLogo ? asset('storage/' . $brandLogo) : asset('images/logo-smk.png') }}" alt="Logo">
             <div class="header-text">
-                <div class="school">SMK Labschool UNESA 1 Surabaya</div>
-                <div class="title">INVENTARIS SMK</div>
+                <div class="school">{{ strtoupper($settings['nama_sekolah'] ?? 'SMK Labschool UNESA 1 Surabaya') }}</div>
+                <div class="title">INVENTARIS {{ strtoupper($settings['nama_singkat'] ?? 'SMK') }}</div>
             </div>
         </div>
 

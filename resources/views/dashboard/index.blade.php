@@ -93,7 +93,15 @@
                                 <td class="px-4 py-3 font-medium text-gray-800">{{ $barang->nama_barang ?? '-' }}</td>
                                 <td class="px-4 py-3">{{ $barang->jumlah ?? 0 }}</td>
                                 <td class="px-4 py-3">
-                                        <span class="badge-baik">Baik: {{ $barang->baik }}</span>
+                                    @if(($barang->baik ?? 0) > 0)
+                                        <span class="badge-baik mr-1">Baik: {{ $barang->baik }}</span>
+                                    @endif
+                                    @if(($barang->rusak ?? 0) > 0)
+                                        <span class="badge-rusak mr-1">Rusak: {{ $barang->rusak }}</span>
+                                    @endif
+                                    @if(($barang->rusak_berat ?? 0) > 0)
+                                        <span class="badge-rusakberat">RB: {{ $barang->rusak_berat }}</span>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

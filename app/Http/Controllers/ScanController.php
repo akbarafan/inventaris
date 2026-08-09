@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\ActivityLog;
 use App\Models\ScanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,9 @@ class ScanController extends Controller
                 'user_id' => Auth::id(),
                 'device' => request()->userAgent(),
                 'ip_address' => request()->ip(),
+            ]);
+            ActivityLog::log('scan', 'Scan QR: ' . $barang->nama_barang, $barang, [
+                'kode' => $barang->kode_barang,
             ]);
             return view('scan.result', compact('barang', 'scanLog'));
         }

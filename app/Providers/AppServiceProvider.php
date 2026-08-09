@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        view()->composer('*', function ($view) {
+            $view->with('settings', \App\Models\Setting::pluck('value', 'key')->toArray());
+        });
+
+        \App\Models\Barang::observe(\App\Observers\BarangObserver::class);
     }
 }

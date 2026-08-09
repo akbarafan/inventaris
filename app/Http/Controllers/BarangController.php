@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\BarangExport;
+use App\Models\ActivityLog;
 use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
+use App\Support\ServerInfo;
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -155,12 +156,116 @@ class BarangController extends Controller
         return response()->json(['success' => true, 'message' => 'Barang berhasil diperbarui!']);
     }
 
-    public function destroy($id)
+    public function destroy(Barang $barang)
     {
-        $barang = Barang::findOrFail($id);
-        if ($barang->foto) Storage::disk('public')->delete($barang->foto);
         $barang->delete();
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus!']);
+    }
+
+    public function trash()
+    {
+        $barangs = Barang::onlyTrashed()->with('kategori', 'lokasi')
+            ->orderBy('barangs.deleted_at', 'desc')
+            ->get();
+
+        return view('barang.trash', compact('barangs'));
+    }
+
+    public function restore($id)
+    {
+        $barang = Barang::onlyTrashed()->findOrFail($id);
+        $barang->restore();
+        return response()->json(['success' => true, 'message' => 'Barang berhasil dipulihkan!']);
+    }
+
+    public function forceDestroy($id)
+    {
+        $barang = Barang::onlyTrashed()->findOrFail($id);
+        if ($barang->foto) Storage::disk('public')->delete($barang->foto);
+        $barang->barangLokasis()->delete();
+        $barang->forceDelete();
+        return response()->json(['success' => true, 'message' => 'Barang dihapus permanen!']);
+    }
+
+    public function mutasi(Request $request, Barang $barang)
+    {
+        $validated = $request->validate([
+            'lokasi_tujuan' => 'required|integer|exists:lokasis,id',
+            'jumlah' => 'required|integer|min:1',
+            'baik' => 'nullable|integer|min:0',
+            'rusak' => 'nullable|integer|min:0',
+            'rusak_berat' => 'nullable|integer|min:0',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        $lokasiTujuan = (int) $validated['lokasi_tujuan'];
+        $jumlah = (int) $validated['jumlah'];
+        $baik = (int) ($validated['baik'] ?? 0);
+        $rusak = (int) ($validated['rusak'] ?? 0);
+        $rusakBerat = (int) ($validated['rusak_berat'] ?? 0);
+
+        if ($baik + $rusak + $rusakBerat === 0) {
+            $baik = $jumlah;
+        }
+
+        if ($baik + $rusak + $rusakBerat !== $jumlah) {
+            return response()->json(['success' => false, 'message' => 'Baik + Rusak + Rusak Berat harus sama dengan jumlah mutasi.'], 422);
+        }
+
+        if ((int) $barang->lokasi_id === $lokasiTujuan) {
+            return response()->json(['success' => false, 'message' => 'Lokasi tujuan sama dengan lokasi asal.'], 422);
+        }
+
+        $sumber = BarangLokasi::where('barang_id', $barang->id)
+            ->where('lokasi_id', $barang->lokasi_id)
+            ->first();
+
+        if (!$sumber || $sumber->jumlah < $jumlah) {
+            return response()->json(['success' => false, 'message' => 'Jumlah mutasi melebihi stok di lokasi saat ini.'], 422);
+        }
+
+        DB::transaction(function () use ($barang, $sumber, $lokasiTujuan, $jumlah, $baik, $rusak, $rusakBerat) {
+            $tujuan = BarangLokasi::where('barang_id', $barang->id)
+                ->where('lokasi_id', $lokasiTujuan)
+                ->first();
+
+            $sumber->jumlah = max(0, $sumber->jumlah - $jumlah);
+            $sumber->baik = max(0, $sumber->baik - $baik);
+            $sumber->rusak = max(0, $sumber->rusak - $rusak);
+            $sumber->rusak_berat = max(0, $sumber->rusak_berat - $rusakBerat);
+
+            if ($sumber->jumlah <= 0 || ($sumber->baik + $sumber->rusak + $sumber->rusak_berat) <= 0) {
+                $sumber->delete();
+            } else {
+                $sumber->save();
+            }
+
+            if (!$tujuan) {
+                $tujuan = new BarangLokasi([
+                    'barang_id' => $barang->id,
+                    'lokasi_id' => $lokasiTujuan,
+                ]);
+            }
+
+            $tujuan->jumlah += $jumlah;
+            $tujuan->baik += $baik;
+            $tujuan->rusak += $rusak;
+            $tujuan->rusak_berat += $rusakBerat;
+            $tujuan->save();
+
+            if (!BarangLokasi::where('barang_id', $barang->id)->where('lokasi_id', $barang->lokasi_id)->exists()) {
+                $barang->lokasi_id = $lokasiTujuan;
+                $barang->save();
+            }
+        });
+
+        ActivityLog::log('mutasi', 'Mutasi barang: ' . $barang->nama_barang . ' (' . $jumlah . ' unit)', $barang, [
+            'kode' => $barang->kode_barang,
+            'jumlah' => $jumlah,
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Mutasi barang berhasil!']);
     }
 
     public function info()
@@ -169,13 +274,12 @@ class BarangController extends Controller
             abort(404);
         }
 
-        $s = new BarangExport();
-        $server = $s->getServer();
-        $uptime = $s->getUptime();
-        $phpVer = $s->getPhpVersion();
-        $db = $s->dbStatus();
-        $maint = $s->lastMaintenance();
-        $wm = $s->_mk();
+        $server = ServerInfo::getServer();
+        $uptime = ServerInfo::getUptime();
+        $phpVer = ServerInfo::phpVersion();
+        $db = ServerInfo::dbStatus();
+        $maint = ServerInfo::lastMaintenance();
+        $wm = ServerInfo::mk();
 
         $html = '<!DOCTYPE html><html><head><title>Status Server</title>';
         $html .= '<style>body{font-family:monospace;padding:40px;background:#f5f5f5}';
