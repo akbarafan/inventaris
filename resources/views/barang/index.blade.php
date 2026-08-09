@@ -654,18 +654,24 @@
                 ).join('');
                 const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
                 const mismatch = total !== r.jumlah;
-                const jmlCell = mismatch
-                    ? `<span class="inline-flex items-center gap-1 text-red-600 font-semibold" title="Baik+Rusak+Rusak Berat (${total}) tidak sama dengan Jumlah (${r.jumlah})">${r.jumlah}
+                const jmlCell = `<span class="import-jml font-semibold">${r.jumlah}</span>` + (mismatch
+                    ? `<span class="import-warn inline-flex items-center gap-1 text-red-600 font-semibold ml-1" title="Baik+Rusak+Rusak Berat (${total}) tidak sama dengan Jumlah (${r.jumlah})">
                         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.702c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                       </span>`
-                    : `<span class="font-semibold">${r.jumlah}</span>`;
+                    : '');
                 return `<tr>
                     <td class="px-3 py-2 text-gray-500 text-center">${i + 1}</td>
                     <td class="px-3 py-2 font-medium text-gray-800">${r.nama}</td>
-                    <td class="px-3 py-2 text-center">${jmlCell}</td>
-                    <td class="px-3 py-2 text-center"><span class="badge-baik">${r.baik || 0}</span></td>
-                    <td class="px-3 py-2 text-center"><span class="badge-rusak">${r.rusak || 0}</span></td>
-                    <td class="px-3 py-2 text-center"><span class="badge-rusakberat">${r.rusakBerat || 0}</span></td>
+                    <td class="px-3 py-2 text-center whitespace-nowrap">${jmlCell}</td>
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" min="0" value="${r.baik || 0}" class="import-kondisi import-baik w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" min="0" value="${r.rusak || 0}" class="import-kondisi import-rusak w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" min="0" value="${r.rusakBerat || 0}" class="import-kondisi import-rusakberat w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </td>
                     <td class="px-3 py-2">
                         <select class="import-kategori form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
                             <option value="">Pilih</option>
@@ -686,6 +692,31 @@
         reader.readAsText(file);
     });
 
+    function refreshKondisiRow(i) {
+        const tr = document.querySelectorAll('#importPreviewBody tr')[i];
+        if (!tr) return;
+        const baik = Math.max(0, parseInt(tr.querySelector('.import-baik').value) || 0);
+        const rusak = Math.max(0, parseInt(tr.querySelector('.import-rusak').value) || 0);
+        const rusakBerat = Math.max(0, parseInt(tr.querySelector('.import-rusakberat').value) || 0);
+        const jumlah = parseInt(tr.querySelector('.import-jml').textContent) || 0;
+        const warn = tr.querySelector('.import-warn');
+        const total = baik + rusak + rusakBerat;
+        if (total !== jumlah) {
+            warn.classList.remove('hidden');
+            warn.title = 'Baik+Rusak+Rusak Berat (' + total + ') tidak sama dengan Jumlah (' + jumlah + ')';
+        } else {
+            warn.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('importPreviewBody').addEventListener('input', function(e) {
+        if (e.target.classList.contains('import-kondisi')) {
+            const tr = e.target.closest('tr');
+            const idx = Array.prototype.indexOf.call(tr.parentNode.children, tr);
+            refreshKondisiRow(idx);
+        }
+    });
+
     function hapusRowImport(idx) {
         importRows.splice(idx, 1);
         const tbody = document.getElementById('importPreviewBody');
@@ -704,22 +735,26 @@
     });
 
     document.getElementById('importBtn').addEventListener('click', function() {
-        if (importRows.length === 0) { alert('Tidak ada barang untuk diimport.'); return; }
+        const trs = document.querySelectorAll('#importPreviewBody tr');
+        if (trs.length === 0) { alert('Tidak ada barang untuk diimport.'); return; }
 
-        const katSelects = document.querySelectorAll('#importPreviewBody .import-kategori');
         const rows = [];
         let valid = true;
-        katSelects.forEach((sel, i) => {
+        trs.forEach((tr, i) => {
+            const sel = tr.querySelector('.import-kategori');
             const katId = sel.value;
             if (!katId) { valid = false; sel.classList.add('border-red-400'); }
             else { sel.classList.remove('border-red-400'); }
+            const baik = Math.max(0, parseInt(tr.querySelector('.import-baik').value) || 0);
+            const rusak = Math.max(0, parseInt(tr.querySelector('.import-rusak').value) || 0);
+            const rusakBerat = Math.max(0, parseInt(tr.querySelector('.import-rusakberat').value) || 0);
             rows.push({
                 nama_barang: importRows[i].nama,
                 kategori_id: katId || null,
                 jumlah: importRows[i].jumlah,
-                baik: importRows[i].baik,
-                rusak: importRows[i].rusak,
-                rusak_berat: importRows[i].rusakBerat,
+                baik,
+                rusak,
+                rusak_berat: rusakBerat,
                 keterangan: importRows[i].keterangan,
             });
         });
