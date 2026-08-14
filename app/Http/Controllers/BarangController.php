@@ -56,30 +56,24 @@ class BarangController extends Controller
         }
 
         DB::transaction(function () use ($validated, $request) {
-            $kodeBarang = $request->input('kode_barang');
-            if (!$kodeBarang || Barang::where('kode_barang', $kodeBarang)->exists()) {
-                $kodeBarang = Barang::generateKodeBarang($validated['lokasi_id'], $validated['kategori_id'], $validated['nama_barang']);
-            }
-
             $fotoPath = null;
             if ($request->hasFile('foto')) {
                 $fotoPath = $request->file('foto')->store('foto', 'public');
             }
 
-            $barang = Barang::create([
-                'kode_barang' => $kodeBarang,
+            $barang = Barang::createBarangUnique([
                 'nama_barang' => $validated['nama_barang'],
                 'kategori_id' => $validated['kategori_id'],
                 'lokasi_id' => $validated['lokasi_id'],
-                'sumber' => $validated['sumber'],
+                'sumber' => $validated['sumber'] ?? null,
                 'tanggal_masuk' => $validated['tanggal_masuk'] ?? now()->toDateString(),
                 'jumlah' => $validated['jumlah'],
                 'baik' => $validated['baik'],
                 'rusak' => $validated['rusak'],
                 'rusak_berat' => $validated['rusak_berat'],
-                'keterangan' => $validated['keterangan'],
+                'keterangan' => $validated['keterangan'] ?? null,
                 'foto' => $fotoPath,
-            ]);
+            ], $request->input('kode_barang'));
 
             BarangLokasi::create([
                 'barang_id' => $barang->id,
@@ -372,10 +366,8 @@ class BarangController extends Controller
 
             try {
                 $lokasiId = $lokasi?->id;
-                $kodeBarang = Barang::generateKodeBarang($lokasiId, $row['kategori_id'], $row['nama_barang']);
 
-                $barang = Barang::create([
-                    'kode_barang' => $kodeBarang,
+                $barang = Barang::createBarangUnique([
                     'nama_barang' => $row['nama_barang'],
                     'kategori_id' => $row['kategori_id'],
                     'lokasi_id' => $lokasiId,

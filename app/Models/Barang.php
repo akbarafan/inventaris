@@ -9,6 +9,8 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class Barang extends Model
 {
@@ -40,13 +42,17 @@ class Barang extends Model
         return $this->hasMany(ScanLog::class, 'barang_id');
     }
 
-    public static function generateKodeBarang($lokasi, $kategori, $namaBarang = '')
+    public static function kodeBarangBase($lokasi, $kategori, $namaBarang = '')
     {
         $lokasiKode = $lokasi instanceof Lokasi ? $lokasi->kode : Lokasi::find($lokasi)?->kode ?? 'XX';
         $kategoriKode = $kategori instanceof Kategori ? $kategori->kode : Kategori::find($kategori)?->kode ?? 'XXX';
-        $initials = static::initials($namaBarang);
 
-        $baseKode = "{$lokasiKode}-{$kategoriKode}-{$initials}";
+        return "{$lokasiKode}-{$kategoriKode}-" . static::initials($namaBarang);
+    }
+
+    public static function generateKodeBarang($lokasi, $kategori, $namaBarang = '')
+    {
+        $baseKode = static::kodeBarangBase($lokasi, $kategori, $namaBarang);
         $kode = $baseKode;
         $counter = 2;
         while (static::where('kode_barang', $kode)->exists()) {
@@ -55,6 +61,36 @@ class Barang extends Model
         }
 
         return $kode;
+    }
+
+    public static function createBarangUnique(array $data, ?string $customKode = null): Barang
+    {
+        $attempt = 0;
+
+        while (true) {
+            $attempt++;
+
+            if ($customKode && $attempt === 1) {
+                $kode = $customKode;
+            } else {
+                $baseKode = static::kodeBarangBase(
+                    $data['lokasi_id'] ?? null,
+                    $data['kategori_id'] ?? null,
+                    $data['nama_barang'] ?? ''
+                );
+                $kode = $attempt === 1 ? $baseKode : "{$baseKode}-{$attempt}";
+            }
+
+            $data['kode_barang'] = $kode;
+
+            try {
+                return DB::transaction(fn () => static::query()->create($data));
+            } catch (QueryException $e) {
+                if ($e->getCode() !== '23000' || $attempt >= 50) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     public function generateQrSvg($size = 200, $public = false)
