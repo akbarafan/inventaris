@@ -86,11 +86,30 @@ class Barang extends Model
             try {
                 return DB::transaction(fn () => static::query()->create($data));
             } catch (QueryException $e) {
-                if ($e->getCode() !== '23000' || $attempt >= 50) {
+                if (! static::isDuplicateEntry($e) || $attempt >= 50) {
                     throw $e;
                 }
             }
         }
+    }
+
+    private static function isDuplicateEntry(QueryException $e): bool
+    {
+        $message = $e->getMessage();
+
+        if (str_contains($message, 'Duplicate entry')) {
+            return true;
+        }
+
+        if (str_contains($message, 'SQLSTATE[23505]') || str_contains($message, 'duplicate key value violates unique constraint')) {
+            return true;
+        }
+
+        if (str_contains($message, 'UNIQUE constraint failed')) {
+            return true;
+        }
+
+        return false;
     }
 
     public function generateQrSvg($size = 200, $public = false)
