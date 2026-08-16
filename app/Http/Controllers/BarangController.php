@@ -152,33 +152,9 @@ class BarangController extends Controller
 
     public function destroy(Barang $barang)
     {
+        if ($barang->foto) Storage::disk('public')->delete($barang->foto);
         $barang->delete();
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus!']);
-    }
-
-    public function trash()
-    {
-        $barangs = Barang::onlyTrashed()->with('kategori', 'lokasi')
-            ->orderBy('barangs.deleted_at', 'desc')
-            ->get();
-
-        return view('barang.trash', compact('barangs'));
-    }
-
-    public function restore($id)
-    {
-        $barang = Barang::onlyTrashed()->findOrFail($id);
-        $barang->restore();
-        return response()->json(['success' => true, 'message' => 'Barang berhasil dipulihkan!']);
-    }
-
-    public function forceDestroy($id)
-    {
-        $barang = Barang::onlyTrashed()->findOrFail($id);
-        if ($barang->foto) Storage::disk('public')->delete($barang->foto);
-        $barang->barangLokasis()->delete();
-        $barang->forceDelete();
-        return response()->json(['success' => true, 'message' => 'Barang dihapus permanen!']);
     }
 
     public function mutasi(Request $request, Barang $barang)
@@ -343,6 +319,7 @@ class BarangController extends Controller
             'rows.*.rusak' => 'required|integer|min:0',
             'rows.*.rusak_berat' => 'required|integer|min:0',
             'rows.*.keterangan' => 'nullable|string',
+            'rows.*.sumber' => 'nullable|string|max:255',
             'ruang' => 'nullable|string|max:255',
             'sumber' => 'nullable|string|max:255',
         ]);
@@ -371,7 +348,7 @@ class BarangController extends Controller
                     'nama_barang' => $row['nama_barang'],
                     'kategori_id' => $row['kategori_id'],
                     'lokasi_id' => $lokasiId,
-                    'sumber' => $sumber,
+                    'sumber' => $row['sumber'] ?? $sumber,
                     'tanggal_masuk' => now()->toDateString(),
                     'jumlah' => $row['jumlah'],
                     'baik' => $row['baik'],

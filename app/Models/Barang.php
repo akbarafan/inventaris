@@ -8,14 +8,11 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class Barang extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
         'kode_barang', 'nama_barang', 'kategori_id', 'lokasi_id', 'sumber',
         'foto', 'jumlah', 'baik', 'rusak', 'rusak_berat',

@@ -19,10 +19,6 @@
                 <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m0 0l-3-3m3 3l3-3"/></svg>
                 Import CSV
             </button>
-            <a href="{{ url('/barang/sampah') }}" class="btn-outline text-sm px-4 py-2">
-                <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M8 5V3h8v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V5"/></svg>
-                Sampah
-            </a>
             @endif
             <button onclick="openModal('barangModal')" class="btn-primary text-sm px-4 py-2">
                 <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -286,7 +282,8 @@
                             <th class="px-3 py-2 font-medium w-16 text-center">Baik</th>
                             <th class="px-3 py-2 font-medium w-16 text-center">Rusak</th>
                             <th class="px-3 py-2 font-medium w-20 text-center">Rusak Berat</th>
-                            <th class="px-3 py-2 font-medium w-40">Kategori</th>
+                            <th class="px-3 py-2 font-medium w-36">Kategori</th>
+                            <th class="px-3 py-2 font-medium w-32">Sumber</th>
                             <th class="px-3 py-2 font-medium w-12 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -598,6 +595,7 @@
             const lines = text.split(/\r?\n/);
             let ruang = null;
             let dataStart = false;
+            let colIdx = null;
             const rows = [];
 
             for (let i = 0; i < lines.length; i++) {
@@ -613,28 +611,43 @@
                 const joinedLower = lower.join(',');
 
                 if (!dataStart) {
-                    if (joinedLower.includes('nama_barang')) { dataStart = true; continue; }
-                    if ((lower[1] ?? '') === 'no' && (lower[2] ?? '') === 'nama barang') { dataStart = true; continue; }
+                    if (joinedLower.includes('nama_barang') || ((lower[1] ?? '') === 'no' && (lower[2] ?? '') === 'nama barang')) {
+                        dataStart = true;
+                        colIdx = {};
+                        lower.forEach((c, i) => {
+                            const key = c.replace(/[_\-\s]+/g, '').toLowerCase();
+                            if (key === 'no' || key === 'nomor') colIdx.no = i;
+                            else if (key === 'namabarang' || key === 'nama') colIdx.nama = i;
+                            else if (key === 'jumlah') colIdx.jumlah = i;
+                            else if (key === 'baik') colIdx.baik = i;
+                            else if (key === 'rusakberat') colIdx.rusakBerat = i;
+                            else if (key === 'rusak') colIdx.rusak = i;
+                            else if (key === 'keterangan' || key === 'ket') colIdx.keterangan = i;
+                            else if (key === 'sumber') colIdx.sumber = i;
+                        });
+                    }
                     continue;
                 }
 
                 if (!cols.some(c => c)) continue;
 
-                const no = cols[1] ?? '';
-                if (!isNaN(parseFloat(no)) && cols[2] && cols[2].trim()) {
-                    const jml = parseInt(cols[3]) || 1;
-                    const b = parseInt(cols[4]) || 0;
-                    const rs = parseInt(cols[5]) || 0;
-                    const rb = parseInt(cols[6]) || 0;
+                const no = colIdx?.no !== undefined ? (cols[colIdx.no] ?? '') : (cols[1] ?? '');
+                const nama = colIdx?.nama !== undefined ? (cols[colIdx.nama] ?? '') : (cols[2] ?? '');
+                if (!isNaN(parseFloat(no)) && nama && nama.trim()) {
+                    const jml = parseInt(cols[colIdx?.jumlah ?? 3]) || 1;
+                    const b = parseInt(cols[colIdx?.baik ?? 4]) || 0;
+                    const rs = parseInt(cols[colIdx?.rusak ?? 5]) || 0;
+                    const rb = parseInt(cols[colIdx?.rusakBerat ?? 6]) || 0;
                     let baik = b, rusak = rs, rusakBerat = rb;
                     if (b + rs + rb === 0) baik = jml;
                     rows.push({
-                        nama: cols[2].trim(),
+                        nama: nama.trim(),
                         jumlah: jml,
                         baik,
                         rusak,
                         rusakBerat,
-                        keterangan: cols[7] ?? '',
+                        keterangan: colIdx?.keterangan !== undefined ? (cols[colIdx.keterangan] ?? '') : (cols[7] ?? ''),
+                        sumber: colIdx?.sumber !== undefined ? (cols[colIdx.sumber] ?? '').trim() : '',
                     });
                 }
             }
@@ -647,10 +660,16 @@
 
             const kategoris = @json($kategoris);
             const defaultKat = document.getElementById('importKategori').value;
+            const defaultSumber = document.getElementById('importSumber').value;
+            const sumberList = ['BOS', 'APBD', 'Swadaya', 'Hibah', 'Lainnya'];
             const tbody = document.getElementById('importPreviewBody');
             tbody.innerHTML = rows.map((r, i) => {
                 const katOpts = kategoris.map(k =>
                     `<option value="${k.id}" ${k.id == defaultKat ? 'selected' : ''}>${k.nama_kategori}</option>`
+                ).join('');
+                const rowSumber = sumberList.includes(r.sumber) ? r.sumber : defaultSumber;
+                const srcOpts = `<option value="">Pilih</option>` + sumberList.map(s =>
+                    `<option value="${s}" ${s === rowSumber ? 'selected' : ''}>${s}</option>`
                 ).join('');
                 const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
                 const mismatch = total !== r.jumlah;
@@ -676,6 +695,11 @@
                         <select class="import-kategori form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
                             <option value="">Pilih</option>
                             ${katOpts}
+                        </select>
+                    </td>
+                    <td class="px-3 py-2">
+                        <select class="import-sumber form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                            ${srcOpts}
                         </select>
                     </td>
                     <td class="px-3 py-2 text-center">
@@ -756,6 +780,7 @@
                 rusak,
                 rusak_berat: rusakBerat,
                 keterangan: importRows[i].keterangan,
+                sumber: tr.querySelector('.import-sumber').value || null,
             });
         });
 

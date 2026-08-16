@@ -27,9 +27,6 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::post('barang/import-csv', [BarangController::class, 'importCsv'])->name('barang.import');
         Route::get('laporan/export-barang', [LaporanController::class, 'exportBarang'])->name('laporan.export.barang');
-        Route::get('barang/sampah', [BarangController::class, 'trash'])->name('barang.trash');
-        Route::post('barang/{id}/restore', [BarangController::class, 'restore'])->name('barang.restore');
-        Route::delete('barang/{id}/force-delete', [BarangController::class, 'forceDestroy'])->name('barang.force-delete');
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::post('users', [UserController::class, 'store'])->name('users.store');

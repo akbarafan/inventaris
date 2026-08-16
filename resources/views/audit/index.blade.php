@@ -24,7 +24,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Tindakan</label>
             <select name="action" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                 <option value="">Semua Tindakan</option>
-                @foreach(['created', 'updated', 'deleted', 'restored', 'scan', 'login', 'logout', 'import', 'mutasi'] as $act)
+                @foreach(['created', 'updated', 'deleted', 'scan', 'login', 'logout', 'import', 'mutasi'] as $act)
                 <option value="{{ $act }}" {{ request('action') == $act ? 'selected' : '' }}>{{ ucfirst($act) }}</option>
                 @endforeach
             </select>
@@ -60,7 +60,6 @@
                                 'created' => 'bg-green-50 text-green-700',
                                 'updated' => 'bg-blue-50 text-blue-700',
                                 'deleted' => 'bg-red-50 text-red-700',
-                                'restored' => 'bg-teal-50 text-teal-700',
                                 'scan' => 'bg-indigo-50 text-indigo-700',
                                 'login' => 'bg-gray-100 text-gray-600',
                                 'logout' => 'bg-gray-100 text-gray-600',

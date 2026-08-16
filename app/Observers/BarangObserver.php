@@ -27,11 +27,4 @@ class BarangObserver
             'kode' => $barang->kode_barang,
         ]);
     }
-
-    public function restored(Barang $barang)
-    {
-        ActivityLog::log('restored', 'Memulihkan barang: ' . $barang->nama_barang, $barang, [
-            'kode' => $barang->kode_barang,
-        ]);
-    }
 }
