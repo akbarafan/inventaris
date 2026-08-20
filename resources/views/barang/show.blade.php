@@ -27,7 +27,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500 text-xs block">Sumber</span>
-                        <p class="font-medium text-gray-800">{{ $barang->sumber ?? '-' }}</p>
+                        <p class="font-medium text-gray-800">{{ $barang->sumber->nama_sumber ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-xs block">Jumlah Total</span>

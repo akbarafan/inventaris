@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Kategori;
+use App\Models\Sumber;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
@@ -11,20 +12,21 @@ class LaporanController extends Controller
     public function index()
     {
         $kategoris = Kategori::all();
+        $sumbers = Sumber::all();
         $totalBarang = Barang::sum('jumlah');
         $totalKategori = Kategori::count();
-        return view('laporan.index', compact('kategoris', 'totalBarang', 'totalKategori'));
+        return view('laporan.index', compact('kategoris', 'sumbers', 'totalBarang', 'totalKategori'));
     }
 
     public function exportBarang(Request $request)
     {
         $kondisi = $request->input('kondisi');
         $kategoriId = $request->input('kategori_id');
-        $sumber = $request->input('sumber');
+        $sumberId = $request->input('sumber_id');
         $start = $request->input('start_date');
         $end = $request->input('end_date');
 
-        $query = Barang::with('kategori');
+        $query = Barang::with('kategori', 'sumber');
 
         if ($kondisi && in_array($kondisi, ['baik', 'rusak', 'rusak_berat'])) {
             $query->where($kondisi, '>', 0);
@@ -34,8 +36,8 @@ class LaporanController extends Controller
             $query->where('kategori_id', $kategoriId);
         }
 
-        if ($sumber) {
-            $query->where('sumber', $sumber);
+        if ($sumberId) {
+            $query->where('sumber_id', $sumberId);
         }
 
         if ($start) {
@@ -76,7 +78,7 @@ class LaporanController extends Controller
                     $barang->nama_barang,
                     $barang->kategori?->nama_kategori ?? '-',
                     $barang->lokasi?->nama_lokasi ?? '-',
-                    $barang->sumber ?? '-',
+                    $barang->sumber?->nama_sumber ?? '-',
                     $barang->tanggal_masuk ?? '-',
                     $barang->jumlah,
                     $barang->baik,

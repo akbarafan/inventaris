@@ -7,6 +7,7 @@ use App\Models\Barang;
 use App\Models\BarangLokasi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
+use App\Models\Sumber;
 use App\Support\ServerInfo;
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
@@ -31,8 +32,9 @@ class BarangController extends Controller
 
         $kategoris = Kategori::all();
         $lokasis = Lokasi::all();
+        $sumbers = Sumber::all();
 
-        return view('barang.index', compact('barangs', 'kategoris', 'lokasis'));
+        return view('barang.index', compact('barangs', 'kategoris', 'lokasis', 'sumbers'));
     }
 
     public function store(Request $request)
@@ -41,7 +43,7 @@ class BarangController extends Controller
             'nama_barang' => 'required|string|max:255',
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'required|exists:lokasis,id',
-            'sumber' => 'nullable|string|max:255',
+            'sumber_id' => 'nullable|exists:sumbers,id',
             'tanggal_masuk' => 'nullable|date',
             'jumlah' => 'required|integer|min:1',
             'baik' => 'required|integer|min:0',
@@ -65,7 +67,7 @@ class BarangController extends Controller
                 'nama_barang' => $validated['nama_barang'],
                 'kategori_id' => $validated['kategori_id'],
                 'lokasi_id' => $validated['lokasi_id'],
-                'sumber' => $validated['sumber'] ?? null,
+                'sumber_id' => $validated['sumber_id'] ?? null,
                 'tanggal_masuk' => $validated['tanggal_masuk'] ?? now()->toDateString(),
                 'jumlah' => $validated['jumlah'],
                 'baik' => $validated['baik'],
@@ -90,7 +92,7 @@ class BarangController extends Controller
 
     public function show($id)
     {
-        $barang = Barang::with('kategori', 'lokasi', 'barangLokasis.lokasi', 'scanLogs.user')
+        $barang = Barang::with('kategori', 'lokasi', 'sumber', 'barangLokasis.lokasi', 'scanLogs.user')
             ->findOrFail($id);
 
         if (request()->wantsJson()) {
@@ -102,7 +104,7 @@ class BarangController extends Controller
 
     public function edit($id)
     {
-        $barang = Barang::with('lokasi', 'barangLokasis')->findOrFail($id);
+        $barang = Barang::with('lokasi', 'sumber', 'barangLokasis')->findOrFail($id);
         return response()->json($barang);
     }
 
@@ -112,7 +114,7 @@ class BarangController extends Controller
             'nama_barang' => 'required|string|max:255',
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'nullable|exists:lokasis,id',
-            'sumber' => 'nullable|string|max:255',
+            'sumber_id' => 'nullable|exists:sumbers,id',
             'tanggal_masuk' => 'nullable|date',
             'jumlah' => 'required|integer|min:0',
             'baik' => 'required|integer|min:0',
@@ -152,8 +154,19 @@ class BarangController extends Controller
 
     public function destroy(Barang $barang)
     {
-        if ($barang->foto) Storage::disk('public')->delete($barang->foto);
-        $barang->delete();
+        DB::transaction(function () use ($barang) {
+            if ($barang->foto) Storage::disk('public')->delete($barang->foto);
+
+            $barang->barangLokasis()->delete();
+            $barang->scanLogs()->delete();
+
+            ActivityLog::where('model_type', Barang::class)
+                ->where('model_id', $barang->id)
+                ->delete();
+
+            $barang->delete();
+        });
+
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus!']);
     }
 
@@ -272,7 +285,7 @@ class BarangController extends Controller
 
     public function publicDetail($kode)
     {
-        $barang = Barang::with('kategori', 'barangLokasis.lokasi')
+        $barang = Barang::with('kategori', 'sumber', 'barangLokasis.lokasi')
             ->where('kode_barang', $kode)
             ->firstOrFail();
         return view('barang.public', compact('barang'));
@@ -319,9 +332,9 @@ class BarangController extends Controller
             'rows.*.rusak' => 'required|integer|min:0',
             'rows.*.rusak_berat' => 'required|integer|min:0',
             'rows.*.keterangan' => 'nullable|string',
-            'rows.*.sumber' => 'nullable|string|max:255',
+            'rows.*.sumber_id' => 'nullable|exists:sumbers,id',
             'ruang' => 'nullable|string|max:255',
-            'sumber' => 'nullable|string|max:255',
+            'sumber_id' => 'nullable|exists:sumbers,id',
         ]);
 
         $lokasi = null;
@@ -329,7 +342,7 @@ class BarangController extends Controller
             $lokasi = Lokasi::firstOrCreate(['nama_lokasi' => $request->ruang]);
         }
 
-        $sumber = $request->input('sumber');
+        $sumberId = $request->input('sumber_id');
         $success = 0;
         $errors = [];
         $rows = $request->input('rows');
@@ -348,7 +361,7 @@ class BarangController extends Controller
                     'nama_barang' => $row['nama_barang'],
                     'kategori_id' => $row['kategori_id'],
                     'lokasi_id' => $lokasiId,
-                    'sumber' => $row['sumber'] ?? $sumber,
+                    'sumber_id' => $row['sumber_id'] ?? $sumberId,
                     'tanggal_masuk' => now()->toDateString(),
                     'jumlah' => $row['jumlah'],
                     'baik' => $row['baik'],

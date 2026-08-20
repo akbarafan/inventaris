@@ -53,7 +53,7 @@
                 </div>
                 <div>
                     <div class="label">Sumber</div>
-                    <div class="value">{{ $barang->sumber ?? '-' }}</div>
+                    <div class="value">{{ $barang->sumber->nama_sumber ?? '-' }}</div>
                 </div>
             </div>
 

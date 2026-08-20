@@ -137,11 +137,9 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Sumber</label>
                     <select id="sumberBarang" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Pilih Sumber</option>
-                        <option value="BOS">BOS</option>
-                        <option value="APBD">APBD</option>
-                        <option value="Swadaya">Swadaya</option>
-                        <option value="Hibah">Hibah</option>
-                        <option value="Lainnya">Lainnya</option>
+                        @foreach($sumbers ?? [] as $s)
+                        <option value="{{ $s->id }}">{{ $s->nama_sumber }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -254,11 +252,9 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Sumber Default</label>
                 <select id="importSumber" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Semua Sumber</option>
-                    <option value="BOS">BOS</option>
-                    <option value="APBD">APBD</option>
-                    <option value="Swadaya">Swadaya</option>
-                    <option value="Hibah">Hibah</option>
-                    <option value="Lainnya">Lainnya</option>
+                    @foreach($sumbers ?? [] as $s)
+                    <option value="{{ $s->id }}">{{ $s->nama_sumber }}</option>
+                    @endforeach
                 </select>
                 <p class="text-xs text-gray-400 mt-1">Sumber default untuk semua barang import</p>
             </div>
@@ -425,7 +421,7 @@
         fd.append('nama_barang', document.getElementById('namaBarang').value);
         fd.append('kode_barang', document.getElementById('kodeBarangDisplay').value);
         fd.append('kategori_id', document.getElementById('kategoriBarang').value);
-        fd.append('sumber', document.getElementById('sumberBarang').value);
+        fd.append('sumber_id', document.getElementById('sumberBarang').value);
         fd.append('tanggal_masuk', document.getElementById('tanggalMasuk').value);
         fd.append('lokasi_id', document.getElementById('lokasiBarang').value);
         fd.append('keterangan', document.getElementById('keteranganBarang').value);
@@ -463,7 +459,7 @@
             document.getElementById('namaBarang').value = data.nama_barang;
             document.getElementById('kodeBarangDisplay').value = data.kode_barang;
             document.getElementById('kategoriBarang').value = data.kategori_id;
-            document.getElementById('sumberBarang').value = data.sumber;
+            document.getElementById('sumberBarang').value = data.sumber_id;
             document.getElementById('tanggalMasuk').value = data.tanggal_masuk?.split(' ')[0] || '';
             document.getElementById('lokasiBarang').value = data.lokasi_id || data.barang_lokasis?.[0]?.lokasi_id || '';
             document.getElementById('keteranganBarang').value = data.keterangan || '';
@@ -541,7 +537,7 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Sumber</span>
-                                <p class="font-medium">${data.sumber || '-'}</p>
+                                <p class="font-medium">${data.sumber?.nama_sumber || '-'}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Jumlah Total</span>
@@ -659,17 +655,21 @@
             document.getElementById('importRowCount').textContent = rows.length;
 
             const kategoris = @json($kategoris);
+            const sumbers = @json($sumbers);
             const defaultKat = document.getElementById('importKategori').value;
             const defaultSumber = document.getElementById('importSumber').value;
-            const sumberList = ['BOS', 'APBD', 'Swadaya', 'Hibah', 'Lainnya'];
             const tbody = document.getElementById('importPreviewBody');
+            const sumberById = {};
+            sumbers.forEach(s => sumberById[s.id] = s.nama_sumber);
+            const sumberByName = {};
+            sumbers.forEach(s => sumberByName[s.nama_sumber.toLowerCase()] = s.id);
             tbody.innerHTML = rows.map((r, i) => {
                 const katOpts = kategoris.map(k =>
                     `<option value="${k.id}" ${k.id == defaultKat ? 'selected' : ''}>${k.nama_kategori}</option>`
                 ).join('');
-                const rowSumber = sumberList.includes(r.sumber) ? r.sumber : defaultSumber;
-                const srcOpts = `<option value="">Pilih</option>` + sumberList.map(s =>
-                    `<option value="${s}" ${s === rowSumber ? 'selected' : ''}>${s}</option>`
+                const rowSumberId = sumberByName[(r.sumber || '').toLowerCase()] || defaultSumber;
+                const srcOpts = `<option value="">Pilih</option>` + sumbers.map(s =>
+                    `<option value="${s.id}" ${String(s.id) === String(rowSumberId) ? 'selected' : ''}>${s.nama_sumber}</option>`
                 ).join('');
                 const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
                 const mismatch = total !== r.jumlah;
@@ -780,18 +780,18 @@
                 rusak,
                 rusak_berat: rusakBerat,
                 keterangan: importRows[i].keterangan,
-                sumber: tr.querySelector('.import-sumber').value || null,
+                sumber_id: tr.querySelector('.import-sumber').value || null,
             });
         });
 
         if (!valid) { alert('Semua barang harus memiliki kategori.'); return; }
 
         const ruang = document.getElementById('importRuang').textContent;
-        const sumber = document.getElementById('importSumber').value;
+        const sumber_id = document.getElementById('importSumber').value;
         fetch('/barang/import-csv', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
-            body: JSON.stringify({ ruang, sumber: sumber || null, rows })
+            body: JSON.stringify({ ruang, sumber_id: sumber_id || null, rows })
         })
         .then(r => r.json())
         .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal import'); });

@@ -43,13 +43,11 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Sumber</label>
-                <select name="sumber" id="filterSumber" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select name="sumber_id" id="filterSumber" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Semua Sumber</option>
-                    <option value="BOS" {{ request('sumber') == 'BOS' ? 'selected' : '' }}>BOS</option>
-                    <option value="APBD" {{ request('sumber') == 'APBD' ? 'selected' : '' }}>APBD</option>
-                    <option value="Swadaya" {{ request('sumber') == 'Swadaya' ? 'selected' : '' }}>Swadaya</option>
-                    <option value="Hibah" {{ request('sumber') == 'Hibah' ? 'selected' : '' }}>Hibah</option>
-                    <option value="Lainnya" {{ request('sumber') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                    @foreach($sumbers ?? [] as $s)
+                    <option value="{{ $s->id }}" {{ request('sumber_id') == $s->id ? 'selected' : '' }}>{{ $s->nama_sumber }}</option>
+                    @endforeach
                 </select>
             </div>
         </form>
