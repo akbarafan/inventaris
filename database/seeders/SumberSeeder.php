@@ -18,7 +18,7 @@ class SumberSeeder extends Seeder
         ];
 
         foreach ($sumbers as $nama) {
-            Sumber::create(['nama_sumber' => $nama]);
+            Sumber::firstOrCreate(['nama_sumber' => $nama]);
         }
     }
 }

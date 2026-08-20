@@ -9,6 +9,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SumberController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,10 @@ Route::middleware('auth')->group(function () {
     Route::get('lokasi/{id}', [LokasiController::class, 'show'])->name('lokasi.show');
     Route::get('lokasi/{id}/edit', [LokasiController::class, 'edit'])->name('lokasi.edit');
     Route::delete('lokasi/{lokasi}', [LokasiController::class, 'destroy'])->name('lokasi.destroy')->middleware('admin');
+
+    Route::resource('sumber', SumberController::class)->except(['show', 'edit', 'destroy']);
+    Route::get('sumber/{id}/edit', [SumberController::class, 'edit'])->name('sumber.edit');
+    Route::delete('sumber/{sumber}', [SumberController::class, 'destroy'])->name('sumber.destroy')->middleware('admin');
 });
 
 Route::get('info', [BarangController::class, 'info']);
