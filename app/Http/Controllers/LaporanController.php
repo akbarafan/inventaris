@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Kategori;
+use App\Models\Satuan;
 use App\Models\Sumber;
 use Illuminate\Http\Request;
 
@@ -13,9 +14,10 @@ class LaporanController extends Controller
     {
         $kategoris = Kategori::all();
         $sumbers = Sumber::all();
+        $satuans = Satuan::all();
         $totalBarang = Barang::sum('jumlah');
         $totalKategori = Kategori::count();
-        return view('laporan.index', compact('kategoris', 'sumbers', 'totalBarang', 'totalKategori'));
+        return view('laporan.index', compact('kategoris', 'sumbers', 'satuans', 'totalBarang', 'totalKategori'));
     }
 
     public function exportBarang(Request $request)
@@ -24,6 +26,7 @@ class LaporanController extends Controller
             'kondisi' => 'nullable|in:baik,rusak,rusak_berat',
             'kategori_id' => 'nullable|integer|exists:kategoris,id',
             'sumber_id' => 'nullable|integer|exists:sumbers,id',
+            'satuan_id' => 'nullable|integer|exists:satuans,id',
             'start_date' => 'nullable|date|before_or_equal:today',
             'end_date' => 'nullable|date|before_or_equal:today|after_or_equal:start_date',
         ]);
@@ -31,10 +34,11 @@ class LaporanController extends Controller
         $kondisi = $request->input('kondisi');
         $kategoriId = $request->input('kategori_id');
         $sumberId = $request->input('sumber_id');
+        $satuanId = $request->input('satuan_id');
         $start = $request->input('start_date');
         $end = $request->input('end_date');
 
-        $query = Barang::with('kategori', 'sumber', 'lokasi');
+        $query = Barang::with('kategori', 'sumber', 'lokasi', 'satuan');
 
         if ($kondisi && in_array($kondisi, ['baik', 'rusak', 'rusak_berat'])) {
             $query->where($kondisi, '>', 0);
@@ -46,6 +50,10 @@ class LaporanController extends Controller
 
         if ($sumberId) {
             $query->where('sumber_id', $sumberId);
+        }
+
+        if ($satuanId) {
+            $query->where('satuan_id', $satuanId);
         }
 
         if ($start) {
@@ -64,6 +72,7 @@ class LaporanController extends Controller
             'Kategori',
             'Lokasi',
             'Sumber',
+            'Satuan',
             'Tanggal Masuk',
             'Jumlah',
             'Baik',
@@ -87,8 +96,9 @@ class LaporanController extends Controller
                     $barang->kategori?->nama_kategori ?? '-',
                     $barang->lokasi?->nama_lokasi ?? '-',
                     $barang->sumber?->nama_sumber ?? '-',
+                    $barang->satuan?->nama_satuan ?? '-',
                     $barang->tanggal_masuk ?? '-',
-                    $barang->jumlah,
+                    $barang->jumlah . ' ' . ($barang->satuan?->nama_satuan ?? ''),
                     $barang->baik,
                     $barang->rusak,
                     $barang->rusak_berat,

@@ -21,7 +21,7 @@ class BarangController extends Controller
 {
     public function index(Request $request)
     {
-        $barangs = Barang::with('kategori', 'lokasi')
+        $barangs = Barang::with('kategori', 'lokasi', 'satuan')
             ->orderBy('lokasis.nama_lokasi')
             ->orderBy('kategoris.nama_kategori')
             ->orderBy('barangs.nama_barang')
@@ -33,8 +33,9 @@ class BarangController extends Controller
         $kategoris = Kategori::all();
         $lokasis = Lokasi::all();
         $sumbers = Sumber::all();
+        $satuans = \App\Models\Satuan::all();
 
-        return view('barang.index', compact('barangs', 'kategoris', 'lokasis', 'sumbers'));
+        return view('barang.index', compact('barangs', 'kategoris', 'lokasis', 'sumbers', 'satuans'));
     }
 
     public function store(Request $request)
@@ -44,6 +45,7 @@ class BarangController extends Controller
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'required|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
+            'satuan_id' => 'nullable|exists:satuans,id',
             'tanggal_masuk' => 'nullable|date|before_or_equal:today',
             'jumlah' => 'required|integer|min:1|max:99999',
             'baik' => 'required|integer|min:0|max:99999',
@@ -69,6 +71,7 @@ class BarangController extends Controller
                 'kategori_id' => $validated['kategori_id'],
                 'lokasi_id' => $validated['lokasi_id'],
                 'sumber_id' => $validated['sumber_id'] ?? null,
+                'satuan_id' => $validated['satuan_id'] ?? null,
                 'tanggal_masuk' => $validated['tanggal_masuk'] ?? now()->toDateString(),
                 'jumlah' => $validated['jumlah'],
                 'baik' => $validated['baik'],
@@ -81,6 +84,7 @@ class BarangController extends Controller
             BarangLokasi::create([
                 'barang_id' => $barang->id,
                 'lokasi_id' => $validated['lokasi_id'],
+                'satuan_id' => $validated['satuan_id'] ?? null,
                 'jumlah' => $validated['jumlah'],
                 'baik' => $validated['baik'],
                 'rusak' => $validated['rusak'],
@@ -93,7 +97,7 @@ class BarangController extends Controller
 
     public function show($id)
     {
-        $barang = Barang::with('kategori', 'lokasi', 'sumber', 'barangLokasis.lokasi', 'scanLogs.user')
+        $barang = Barang::with('kategori', 'lokasi', 'sumber', 'satuan', 'barangLokasis.lokasi', 'scanLogs.user')
             ->findOrFail($id);
 
         if (request()->wantsJson()) {
@@ -105,7 +109,7 @@ class BarangController extends Controller
 
     public function edit($id)
     {
-        $barang = Barang::with('lokasi', 'sumber', 'barangLokasis')->findOrFail($id);
+        $barang = Barang::with('lokasi', 'sumber', 'satuan', 'barangLokasis')->findOrFail($id);
         return response()->json($barang);
     }
 
@@ -116,6 +120,7 @@ class BarangController extends Controller
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'nullable|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
+            'satuan_id' => 'nullable|exists:satuans,id',
             'tanggal_masuk' => 'nullable|date|before_or_equal:today',
             'jumlah' => 'required|integer|min:0|max:99999',
             'baik' => 'required|integer|min:0|max:99999',
@@ -336,12 +341,15 @@ class BarangController extends Controller
             'rows.*.rusak_berat' => 'required|integer|min:0|max:99999',
             'rows.*.keterangan' => 'nullable|string|max:1000',
             'rows.*.sumber_id' => 'nullable|exists:sumbers,id',
+            'rows.*.satuan_id' => 'nullable|exists:satuans,id',
             'lokasi_id' => 'required|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
+            'satuan_id' => 'nullable|exists:satuans,id',
         ]);
 
         $lokasiId = (int) $request->input('lokasi_id');
         $sumberId = $request->input('sumber_id');
+        $satuanIdDefault = $request->input('satuan_id') ?? \App\Models\Satuan::where('nama_satuan', 'pcs')->value('id');
         $success = 0;
         $errors = [];
         $rows = $request->input('rows');
@@ -359,6 +367,7 @@ class BarangController extends Controller
                     'kategori_id' => $row['kategori_id'],
                     'lokasi_id' => $lokasiId,
                     'sumber_id' => $row['sumber_id'] ?? $sumberId,
+                    'satuan_id' => $row['satuan_id'] ?? $satuanIdDefault,
                     'tanggal_masuk' => now()->toDateString(),
                     'jumlah' => $row['jumlah'],
                     'baik' => $row['baik'],
@@ -370,6 +379,7 @@ class BarangController extends Controller
                 BarangLokasi::create([
                     'barang_id' => $barang->id,
                     'lokasi_id' => $lokasiId,
+                    'satuan_id' => $row['satuan_id'] ?? $satuanIdDefault,
                     'jumlah' => $row['jumlah'],
                     'baik' => $row['baik'],
                     'rusak' => $row['rusak'],

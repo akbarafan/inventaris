@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             KategoriSeeder::class,
             LokasiSeeder::class,
             SumberSeeder::class,
+            SatuanSeeder::class,
         ]);
     }
 }

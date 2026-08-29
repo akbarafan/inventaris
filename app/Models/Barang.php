@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class Barang extends Model
 {
     protected $fillable = [
-        'kode_barang', 'nama_barang', 'kategori_id', 'lokasi_id', 'sumber_id',
+        'kode_barang', 'nama_barang', 'kategori_id', 'lokasi_id', 'sumber_id', 'satuan_id',
         'foto', 'jumlah', 'baik', 'rusak', 'rusak_berat',
         'keterangan', 'tanggal_masuk',
     ];
@@ -28,6 +28,7 @@ class Barang extends Model
         'kategori_id' => 'integer',
         'lokasi_id' => 'integer',
         'sumber_id' => 'integer',
+        'satuan_id' => 'integer',
     ];
 
     public function kategori()
@@ -43,6 +44,11 @@ class Barang extends Model
     public function sumber()
     {
         return $this->belongsTo(Sumber::class, 'sumber_id');
+    }
+
+    public function satuan()
+    {
+        return $this->belongsTo(Satuan::class, 'satuan_id');
     }
 
     public function barangLokasis()

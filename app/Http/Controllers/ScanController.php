@@ -18,7 +18,7 @@ class ScanController extends Controller
 
     public function scan($kode)
     {
-        $barang = Barang::with('kategori', 'sumber', 'barangLokasis.lokasi')
+        $barang = Barang::with('kategori', 'sumber', 'satuan', 'barangLokasis.lokasi')
             ->where('kode_barang', $kode)
             ->firstOrFail();
 

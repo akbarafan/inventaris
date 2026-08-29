@@ -49,7 +49,7 @@
                 </div>
                 <div>
                     <div class="label">Jumlah</div>
-                    <div class="value">{{ $barang->jumlah }}</div>
+                    <div class="value">{{ $barang->jumlah }} {{ $barang->satuan->nama_satuan ?? 'pcs' }}</div>
                 </div>
                 <div>
                     <div class="label">Sumber</div>

@@ -31,7 +31,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500 text-xs block">Jumlah Total</span>
-                        <p class="font-semibold text-gray-800 text-lg">{{ $barang->jumlah }}</p>
+                        <p class="font-semibold text-gray-800 text-lg">{{ $barang->jumlah }} {{ $barang->satuan->nama_satuan ?? 'pcs' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-xs block">Tanggal Masuk</span>

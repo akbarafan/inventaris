@@ -79,6 +79,10 @@
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Sumber
                 </a>
+                <a href="{{ url('/satuan') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('satuan*') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h9a1 1 0 001-1v-3m-3 0a2 2 0 012 2 2 2 0 01-2 2H9a2 2 0 01-2-2 2 2 0 012-2h4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h8"/></svg>
+                    Satuan
+                </a>
                 @if(Auth::user()->isAdmin())
                 <p class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Administrasi</p>
                 <a href="{{ url('/users') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('users*') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">

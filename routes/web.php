@@ -8,6 +8,7 @@ use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ScanController;
+use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SumberController;
 use App\Http\Controllers\UserController;
@@ -61,6 +62,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('sumber', SumberController::class)->except(['show', 'edit', 'destroy']);
     Route::get('sumber/{id}/edit', [SumberController::class, 'edit'])->name('sumber.edit');
     Route::delete('sumber/{sumber}', [SumberController::class, 'destroy'])->name('sumber.destroy')->middleware('admin');
+
+    Route::resource('satuan', SatuanController::class)->except(['show', 'edit', 'destroy']);
+    Route::get('satuan/{id}/edit', [SatuanController::class, 'edit'])->name('satuan.edit');
+    Route::delete('satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy')->middleware('admin');
 });
 
 Route::get('info', [BarangController::class, 'info']);

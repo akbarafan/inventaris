@@ -227,7 +227,7 @@
                 <div class="row">
                     <span class="lbl">JUMLAH</span>
                     <span class="dots">:</span>
-                    <span class="val">{{ $barang->jumlah }} {{ ($barang->baik > 0) ? '- BAIK' : '' }}{{ ($barang->rusak > 0) ? ' - PB' : '' }}{{ ($barang->rusak_berat > 0) ? ' - RB' : '' }}</span>
+                    <span class="val">{{ $barang->jumlah }} {{ $barang->satuan->nama_satuan ?? 'pcs' }}{{ ($barang->baik > 0) ? ' - BAIK' : '' }}{{ ($barang->rusak > 0) ? ' - PB' : '' }}{{ ($barang->rusak_berat > 0) ? ' - RB' : '' }}</span>
                 </div>
                 <div class="row">
                     <span class="lbl">LOKASI</span>

@@ -52,6 +52,15 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                    <select name="satuan_id" id="filterSatuan" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Semua Satuan</option>
+                        @foreach($satuans ?? [] as $st)
+                        <option value="{{ $st->id }}" {{ request('satuan_id') == $st->id ? 'selected' : '' }}>{{ $st->nama_satuan }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="flex gap-2 mt-4">
                 <button type="submit" class="btn-primary text-sm px-4 py-2">Terapkan</button>

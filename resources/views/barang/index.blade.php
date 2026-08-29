@@ -56,6 +56,7 @@
                         <th class="px-4 py-3 font-medium">Kategori</th>
                         <th class="px-4 py-3 font-medium">Ruangan</th>
                         <th class="px-4 py-3 font-medium">Jumlah</th>
+                        <th class="px-4 py-3 font-medium">Satuan</th>
                         <th class="px-4 py-3 font-medium">Baik</th>
                         <th class="px-4 py-3 font-medium">Rusak</th>
                         <th class="px-4 py-3 font-medium">Rusak Berat</th>
@@ -72,6 +73,7 @@
                         <td class="px-4 py-3">{{ $b->kategori->nama_kategori ?? '-' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $b->lokasi->nama_lokasi ?? '-' }}</td>
                         <td class="px-4 py-3 font-semibold">{{ $b->jumlah }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $b->satuan->nama_satuan ?? '-' }}</td>
                         <td class="px-4 py-3"><span class="badge-baik">{{ $b->baik }}</span></td>
                         <td class="px-4 py-3"><span class="badge-rusak">{{ $b->rusak }}</span></td>
                         <td class="px-4 py-3"><span class="badge-rusakberat">{{ $b->rusak_berat }}</span></td>
@@ -98,7 +100,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="11" class="py-12 text-center">
+                    <tr><td colspan="12" class="py-12 text-center">
                         <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293H8.586a1 1 0 00-.707.293l-2.414 2.414A1 1 0 005 21h14a2 2 0 002-2v-5z"/></svg>
                         <p class="text-gray-400 text-sm">Belum ada barang</p>
                         <button onclick="openModal('barangModal')" class="mt-2 text-blue-600 text-sm font-medium hover:underline">+ Tambah pertama</button>
@@ -165,6 +167,16 @@
                         @endforeach
                     </select>
                     <p id="lokasi_idError" class="field-error hidden"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Satuan <span class="text-red-500">*</span></label>
+                    <select id="satuanBarang" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Pilih Satuan</option>
+                        @foreach($satuans ?? [] as $st)
+                        <option value="{{ $st->id }}">{{ $st->nama_satuan }}</option>
+                        @endforeach
+                    </select>
+                    <p id="satuan_idError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
@@ -304,6 +316,7 @@
                             <th class="px-3 py-2 font-medium w-20 text-center">Rusak Berat</th>
                             <th class="px-3 py-2 font-medium w-36">Kategori</th>
                             <th class="px-3 py-2 font-medium w-32">Sumber</th>
+                            <th class="px-3 py-2 font-medium w-28">Satuan</th>
                             <th class="px-3 py-2 font-medium w-12 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -462,6 +475,7 @@
         fd.append('sumber_id', document.getElementById('sumberBarang').value);
         fd.append('tanggal_masuk', document.getElementById('tanggalMasuk').value);
         fd.append('lokasi_id', document.getElementById('lokasiBarang').value);
+        fd.append('satuan_id', document.getElementById('satuanBarang').value);
         fd.append('keterangan', document.getElementById('keteranganBarang').value);
         fd.append('jumlah', total);
         fd.append('baik', parseInt(document.getElementById('kondisiBaik').value) || 0);
@@ -509,6 +523,7 @@
             document.getElementById('sumberBarang').value = data.sumber_id;
             document.getElementById('tanggalMasuk').value = data.tanggal_masuk?.split(' ')[0] || '';
             document.getElementById('lokasiBarang').value = data.lokasi_id || data.barang_lokasis?.[0]?.lokasi_id || '';
+            document.getElementById('satuanBarang').value = data.satuan_id || '';
             document.getElementById('keteranganBarang').value = data.keterangan || '';
             document.getElementById('kondisiBaik').value = data.baik || 0;
             document.getElementById('kondisiRusak').value = data.rusak || 0;
@@ -589,7 +604,7 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Jumlah Total</span>
-                                <p class="font-semibold text-lg">${data.jumlah}</p>
+                                <p class="font-semibold text-lg">${data.jumlah} ${data.satuan?.nama_satuan||''}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Tanggal Masuk</span>
@@ -681,6 +696,7 @@
                             else if (key === 'rusak') colIdx.rusak = i;
                             else if (key === 'keterangan' || key === 'ket') colIdx.keterangan = i;
                             else if (key === 'sumber') colIdx.sumber = i;
+                            else if (key === 'satuan') colIdx.satuan = i;
                         });
                     }
                     continue;
@@ -691,7 +707,28 @@
                 const no = colIdx?.no !== undefined ? (cols[colIdx.no] ?? '') : (cols[1] ?? '');
                 const nama = colIdx?.nama !== undefined ? (cols[colIdx.nama] ?? '') : (cols[2] ?? '');
                 if (!isNaN(parseFloat(no)) && nama && nama.trim()) {
-                    const jml = parseInt(cols[colIdx?.jumlah ?? 3]) || 1;
+                    function parseJumlahSatuan(raw) {
+                        let s = String(raw || '').trim();
+                        if (!s || s === '-' || s === '—') return { jumlah: 1, satuan: 'pcs' };
+                        let isApprox = /^(Lebih dari|lebih dari|±|~|>)/.test(s);
+                        if (isApprox) s = s.replace(/^(Lebih dari|lebih dari|±|~|>)\s*/, '');
+                        let m = s.match(/^(\d+(?:[.,]\d+)?)\s*([a-zA-Z]+)?/);
+                        if (m) {
+                            let j = parseInt(m[1].replace(',', '')) || 1;
+                            let su = (m[2] || 'pcs').toLowerCase();
+                            const map = {pcs:'pcs',buah:'pcs',biji:'pcs',bh:'pcs',unit:'pcs',dus:'dus',kardus:'dus',karton:'dus',box:'dus',kotak:'dus',pack:'pack',pak:'pack',bendel:'pack',bendle:'pack',bundle:'pack',lusin:'lusin',lsn:'lusin',dozen:'lusin',kodi:'kodi',rim:'rim',gross:'gross',set:'set',stel:'set',lembar:'lembar',lbr:'lembar',roll:'roll',gulung:'roll',meter:'meter',m:'meter',karung:'karung',sak:'karung',kaleng:'kaleng',botol:'botol',btl:'botol',batang:'batang',btg:'batang'};
+                            su = map[su] || su;
+                            return { jumlah: j, satuan: su, isApprox };
+                        }
+                        let n = parseInt(s);
+                        if (!isNaN(n)) return { jumlah: n, satuan: 'pcs', isApprox: true };
+                        return { jumlah: 1, satuan: 'pcs', isApprox: true };
+                    }
+                    const rawJumlah = cols[colIdx?.jumlah ?? 3] ?? '';
+                    const parsed = parseJumlahSatuan(rawJumlah);
+                    const jml = parsed.jumlah;
+                    const parsedSatuan = colIdx?.satuan !== undefined ? (cols[colIdx.satuan] ?? '').trim() : '';
+                    const satuanStr = parsedSatuan || parsed.satuan;
                     const b = parseInt(cols[colIdx?.baik ?? 4]) || 0;
                     const rs = parseInt(cols[colIdx?.rusak ?? 5]) || 0;
                     const rb = parseInt(cols[colIdx?.rusakBerat ?? 6]) || 0;
@@ -705,6 +742,7 @@
                         rusakBerat,
                         keterangan: colIdx?.keterangan !== undefined ? (cols[colIdx.keterangan] ?? '') : (cols[7] ?? ''),
                         sumber: colIdx?.sumber !== undefined ? (cols[colIdx.sumber] ?? '').trim() : '',
+                        satuan: satuanStr,
                     });
                 }
             }
@@ -718,6 +756,7 @@
 
             const kategoris = @json($kategoris);
             const sumbers = @json($sumbers);
+            const satuans = @json($satuans ?? []);
             const defaultKat = document.getElementById('importKategori').value;
             const defaultSumber = document.getElementById('importSumber').value;
             const tbody = document.getElementById('importPreviewBody');
@@ -725,6 +764,8 @@
             sumbers.forEach(s => sumberById[s.id] = s.nama_sumber);
             const sumberByName = {};
             sumbers.forEach(s => sumberByName[s.nama_sumber.toLowerCase()] = s.id);
+            const satuanByName = {};
+            satuans.forEach(s => satuanByName[s.nama_satuan.toLowerCase()] = s.id);
             const esc = window.escapeHtml;
             tbody.innerHTML = rows.map((r, i) => {
                 const katOpts = kategoris.map(k =>
@@ -733,6 +774,10 @@
                 const rowSumberId = sumberByName[(r.sumber || '').toLowerCase()] || defaultSumber;
                 const srcOpts = `<option value="">Pilih</option>` + sumbers.map(s =>
                     `<option value="${s.id}" ${String(s.id) === String(rowSumberId) ? 'selected' : ''}>${esc(s.nama_sumber)}</option>`
+                ).join('');
+                const rowSatuanId = satuanByName[(r.satuan || '').toLowerCase()] || '';
+                const satOpts = `<option value="">Pilih</option>` + satuans.map(s =>
+                    `<option value="${s.id}" ${String(s.id) === String(rowSatuanId) ? 'selected' : ''}>${esc(s.nama_satuan)}</option>`
                 ).join('');
                 const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
                 const mismatch = total !== r.jumlah;
@@ -763,6 +808,11 @@
                     <td class="px-3 py-2">
                         <select class="import-sumber form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
                             ${srcOpts}
+                        </select>
+                    </td>
+                    <td class="px-3 py-2">
+                        <select class="import-satuan form-input w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                            ${satOpts}
                         </select>
                     </td>
                     <td class="px-3 py-2 text-center">
@@ -845,6 +895,7 @@
                 rusak_berat: rusakBerat,
                 keterangan: importRows[i].keterangan,
                 sumber_id: tr.querySelector('.import-sumber').value || null,
+                satuan_id: tr.querySelector('.import-satuan').value || null,
             });
         });
 
@@ -869,7 +920,7 @@
     });
 
     function downloadTemplate() {
-        const csv = "No,Nama Barang,Jumlah,Baik,Rusak,Rusak Berat,Keterangan,Sumber\n1,Contoh Proyektor,5,4,1,0,Keterangan, BOS\n";
+        const csv = "No,Nama Barang,Jumlah,Satuan,Baik,Rusak,Rusak Berat,Keterangan,Sumber\n1,Contoh Proyektor,5,pcs,4,1,0,Keterangan,BOS\n2,Contoh Gantungan,4,lusin,4,0,0,,PCS\n";
         const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'template_import_barang.csv'; a.click();
@@ -985,7 +1036,7 @@
                 paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
             },
             order: [[2, 'asc']],
-            columnDefs: [{ orderable: false, targets: [0, 10] }],
+            columnDefs: [{ orderable: false, targets: [0, 11] }],
         });
         dt.on('draw', function() { syncCheckboxUI(); });
     }
