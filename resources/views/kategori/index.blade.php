@@ -27,7 +27,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @foreach($kategoris as $k)
+                    @forelse($kategoris as $k)
                     <tr class="hover:bg-gray-50 transition-colors" data-id="{{ $k->id }}">
                         <td class="px-4 py-3 text-gray-500">{{ $loop->iteration }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800">{{ $k->nama_kategori }}</td>
@@ -38,14 +38,16 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 @if(Auth::user()->isAdmin())
-                                <button onclick="hapusKategori({{ $k->id }})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                <button onclick="hapusKategori({{ $k->id }}, '{{ addslashes($k->nama_kategori) }}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                                 @endif
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr><td colspan="4" class="py-12 text-center"><p class="text-gray-400">Belum ada kategori</p><button onclick="openModal('kategoriModal')" class="mt-2 text-blue-600 text-sm">+ Tambah pertama</button></td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -65,11 +67,12 @@
             <input type="hidden" id="kategoriId">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kategori</label>
-                <input type="text" id="namaKategori" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan nama kategori">
+                <input type="text" id="namaKategori" required maxlength="50" minlength="2" autocomplete="off" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan nama kategori">
+                <p id="kategoriError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('kategoriModal')" class="btn-secondary text-sm px-4 py-2">Batal</button>
-                <button type="submit" class="btn-primary text-sm px-4 py-2">Simpan</button>
+                <button type="submit" id="kategoriSubmitBtn" class="btn-primary text-sm px-4 py-2">Simpan</button>
             </div>
         </form>
     </div>
@@ -80,8 +83,20 @@
 <script>
     let editingKategoriId = null;
 
+    function showKategoriError(msg) {
+        const el = document.getElementById('kategoriError');
+        const input = document.getElementById('namaKategori');
+        if (msg) { el.textContent = msg; el.classList.remove('hidden'); input.classList.add('border-red-500'); }
+        else { el.textContent = ''; el.classList.add('hidden'); input.classList.remove('border-red-500'); }
+    }
+    
+
     document.getElementById('kategoriForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        showKategoriError('');
+        const btn = document.getElementById('kategoriSubmitBtn');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Menyimpan\u2026';
         const id = document.getElementById('kategoriId').value;
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/kategori/${id}` : '/kategori';
@@ -92,14 +107,30 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(r => r.json())
-        .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal menyimpan'); });
+        .then(async r => {
+            const res = await r.json();
+            if (!r.ok) {
+                if (r.status === 422 && res.errors) {
+                    const first = res.errors.nama_kategori ? res.errors.nama_kategori[0] : (res.errors.namaKategori ? res.errors.namaKategori[0] : Object.values(res.errors).flat()[0]);
+                    showKategoriError(first);
+                    window.toast(res.message || first || 'Validasi gagal', 'error');
+                } else {
+                    window.toast(res.message || 'Gagal menyimpan', 'error');
+                }
+                throw new Error('validation');
+            }
+            return res;
+        })
+        .then(res => { if (res.success) { window.toast(res.message || 'Berhasil disimpan', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; } else window.toast(res.message || 'Gagal menyimpan', 'error'); })
+        .catch(err => { if (err.message !== 'validation') window.toast('Terjadi kesalahan, coba lagi.', 'error'); })
+        .finally(() => { btn.disabled = false; btn.textContent = origText; });
     });
 
     function editKategori(id) {
         editingKategoriId = id;
         document.getElementById('kategoriModalTitle').textContent = 'Edit Kategori';
         document.getElementById('kategoriId').value = id;
+        showKategoriError('');
 
         fetch(`/kategori/${id}/edit`)
         .then(r => r.json())
@@ -114,38 +145,49 @@
         document.getElementById('kategoriModalTitle').textContent = 'Tambah Kategori';
         document.getElementById('kategoriId').value = '';
         document.getElementById('namaKategori').value = '';
+        showKategoriError('');
     }
 
-    function hapusKategori(id) {
-        if (!confirm('Yakin ingin menghapus kategori ini?')) return;
+    function hapusKategori(id, nama) {
+        const label = nama ? ` "${nama}"` : '';
+        if (!confirm(`Yakin ingin menghapus kategori${label}?`)) return;
         fetch(`/kategori/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
         })
-        .then(r => r.json())
-        .then(res => { if (res.success) location.reload(); });
+        .then(r => r.json().then(res => ({ ok: r.ok, status: r.status, res })))
+        .then(({ ok, res }) => {
+            if (ok && res.success) { window.toast(res.message || 'Kategori dihapus', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+            else window.toast(res.message || 'Gagal menghapus', 'error');
+        })
+        .catch(() => window.toast('Terjadi kesalahan, coba lagi.', 'error'));
     }
 
     function openModal(id) {
         if (id === 'kategoriModal' && !editingKategoriId) resetKategoriForm();
         document.getElementById(id).classList.remove('hidden');
+        if (id === 'kategoriModal') setTimeout(() => document.getElementById('namaKategori').focus(), 50);
     }
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
     }
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal('kategoriModal'); });
 
-    new DataTable('#kategoriTable', {
-        language: {
-            processing: "Memproses...",
-            lengthMenu: "Tampilkan _MENU_ data",
-            zeroRecords: "Tidak ditemukan data yang sesuai",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-            search: "Cari:",
-            paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-        },
-        columnDefs: [{ orderable: false, targets: [0, 3] }],
-    });
+    const kategoriTableEl = document.getElementById('kategoriTable');
+    if (kategoriTableEl && !kategoriTableEl.querySelector('td[colspan]') && kategoriTableEl.querySelectorAll('tbody tr').length) {
+        new DataTable('#kategoriTable', {
+            language: {
+                processing: "Memproses...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                search: "Cari:",
+                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+            },
+            columnDefs: [{ orderable: false, targets: [0, 3] }],
+        });
+    }
 </script>
 @endpush

@@ -28,7 +28,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @foreach($sumbers as $s)
+                    @forelse($sumbers as $s)
                     <tr class="hover:bg-gray-50 transition-colors" data-id="{{ $s->id }}">
                         <td class="px-4 py-3 text-gray-500">{{ $loop->iteration }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800">{{ $s->nama_sumber }}</td>
@@ -40,14 +40,16 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 @if(Auth::user()->isAdmin())
-                                <button onclick="hapusSumber({{ $s->id }})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                <button onclick="hapusSumber({{ $s->id }}, '{{ addslashes($s->nama_sumber) }}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                                 @endif
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr><td colspan="5" class="py-12 text-center"><p class="text-gray-400">Belum ada sumber</p><button onclick="openModal('sumberModal')" class="mt-2 text-blue-600 text-sm">+ Tambah pertama</button></td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -67,16 +69,18 @@
             <input type="hidden" id="sumberId">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Sumber</label>
-                <input type="text" id="namaSumber" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan nama sumber">
+                <input type="text" id="namaSumber" required maxlength="50" minlength="2" autocomplete="off" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan nama sumber">
+                <p id="sumberNamaError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kode Unik</label>
-                <input type="text" id="kodeSumber" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Otomatis dari nama sumber" maxlength="10">
+                <input type="text" id="kodeSumber" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Otomatis dari nama sumber" maxlength="10" pattern="[A-Za-z0-9]+" autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                <p id="sumberKodeError" class="text-xs text-red-500 mt-1 hidden"></p>
                 <p class="text-xs text-gray-400 mt-1">Kosongkan untuk otomatis.</p>
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('sumberModal')" class="btn-secondary text-sm px-4 py-2">Batal</button>
-                <button type="submit" class="btn-primary text-sm px-4 py-2">Simpan</button>
+                <button type="submit" id="sumberSubmitBtn" class="btn-primary text-sm px-4 py-2">Simpan</button>
             </div>
         </form>
     </div>
@@ -100,11 +104,25 @@
     });
 
     document.getElementById('kodeSumber').addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
         this.dataset.userEdited = this.value !== '';
     });
 
+    
+    function showSumberError(id, msg) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+        else { el.textContent = ''; el.classList.add('hidden'); }
+    }
+    function clearSumberErrors() { showSumberError('sumberNamaError',''); showSumberError('sumberKodeError',''); document.getElementById('namaSumber').classList.remove('border-red-500'); document.getElementById('kodeSumber').classList.remove('border-red-500'); }
+
     document.getElementById('sumberForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        clearSumberErrors();
+        const btn = document.getElementById('sumberSubmitBtn');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Menyimpan\u2026';
         const id = document.getElementById('sumberId').value;
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/sumber/${id}` : '/sumber';
@@ -115,15 +133,31 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(r => r.json())
-        .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal menyimpan'); })
-        .catch(() => alert('Terjadi kesalahan, coba lagi.'));
+        .then(async r => {
+            const res = await r.json();
+            if (!r.ok) {
+                if (r.status === 422 && res.errors) {
+                    if (res.errors.nama_sumber) { showSumberError('sumberNamaError', res.errors.nama_sumber[0]); document.getElementById('namaSumber').classList.add('border-red-500'); }
+                    if (res.errors.kode) { showSumberError('sumberKodeError', res.errors.kode[0]); document.getElementById('kodeSumber').classList.add('border-red-500'); }
+                    const first = Object.values(res.errors).flat()[0];
+                    window.toast(res.message || first || 'Validasi gagal', 'error');
+                } else {
+                    window.toast(res.message || 'Gagal menyimpan', 'error');
+                }
+                throw new Error('validation');
+            }
+            return res;
+        })
+        .then(res => { if (res.success) { window.toast(res.message || 'Berhasil disimpan', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; } else window.toast(res.message || 'Gagal menyimpan', 'error'); })
+        .catch(err => { if (err.message !== 'validation') window.toast('Terjadi kesalahan, coba lagi.', 'error'); })
+        .finally(() => { btn.disabled = false; btn.textContent = origText; });
     });
 
     function editSumber(id) {
         editingSumberId = id;
         document.getElementById('sumberModalTitle').textContent = 'Edit Sumber';
         document.getElementById('sumberId').value = id;
+        clearSumberErrors();
 
         fetch(`/sumber/${id}/edit`)
         .then(r => r.json())
@@ -142,42 +176,49 @@
         document.getElementById('namaSumber').value = '';
         document.getElementById('kodeSumber').value = '';
         delete document.getElementById('kodeSumber').dataset.userEdited;
+        clearSumberErrors();
     }
 
-    function hapusSumber(id) {
-        if (!confirm('Yakin ingin menghapus sumber ini?')) return;
+    function hapusSumber(id, nama) {
+        const label = nama ? ` "${nama}"` : '';
+        if (!confirm(`Yakin ingin menghapus sumber${label}?`)) return;
         fetch(`/sumber/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
         })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) location.reload();
-            else alert(res.message || 'Gagal menghapus');
+        .then(r => r.json().then(res => ({ ok: r.ok, status: r.status, res })))
+        .then(({ ok, res }) => {
+            if (ok && res.success) { window.toast(res.message || 'Sumber dihapus', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+            else window.toast(res.message || 'Gagal menghapus', 'error');
         })
-        .catch(() => alert('Terjadi kesalahan, coba lagi.'));
+        .catch(() => window.toast('Terjadi kesalahan, coba lagi.', 'error'));
     }
 
     function openModal(id) {
         if (id === 'sumberModal' && !editingSumberId) resetSumberForm();
         document.getElementById(id).classList.remove('hidden');
+        if (id === 'sumberModal') setTimeout(() => document.getElementById('namaSumber').focus(), 50);
     }
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
     }
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal('sumberModal'); });
 
-    new DataTable('#sumberTable', {
-        language: {
-            processing: "Memproses...",
-            lengthMenu: "Tampilkan _MENU_ data",
-            zeroRecords: "Tidak ditemukan data yang sesuai",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-            search: "Cari:",
-            paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-        },
-        columnDefs: [{ orderable: false, targets: [0, 4] }],
-    });
+    const sumberTableEl = document.getElementById('sumberTable');
+    if (sumberTableEl && !sumberTableEl.querySelector('td[colspan]') && sumberTableEl.querySelectorAll('tbody tr').length) {
+        new DataTable('#sumberTable', {
+            language: {
+                processing: "Memproses...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                search: "Cari:",
+                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+            },
+            columnDefs: [{ orderable: false, targets: [0, 4] }],
+        });
+    }
 </script>
 @endpush

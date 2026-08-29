@@ -37,7 +37,8 @@
                     <video id="qr-video" class="w-full rounded-lg border border-gray-200 bg-black" autoplay playsinline></video>
                     <canvas id="qr-canvas" class="hidden"></canvas>
                     <div id="cameraError" class="hidden mt-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center">
-                        Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.
+                        <p>Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.</p>
+                        <button onclick="retryCamera()" class="mt-2 btn-primary text-xs px-3 py-1.5">Coba Lagi</button>
                     </div>
                     <p class="text-sm text-gray-500 text-center mt-3">Arahkan kode QR ke kamera</p>
                 </div>
@@ -70,8 +71,9 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Masukkan Kode Barang</label>
                         <div class="flex gap-2">
-                            <input type="text" id="manualKode" placeholder="Contoh: BRG-001" class="form-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <input type="text" id="manualKode" placeholder="Contoh: RKL-ELE-PROJ" maxlength="50" autocomplete="off" spellcheck="false" style="text-transform:uppercase" class="form-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <button onclick="cariManual()" class="btn-primary text-sm px-4 py-2">Cari</button>
+                            <button onclick="clearManual()" class="btn-secondary text-sm px-3 py-2" title="Bersihkan">Hapus</button>
                         </div>
                     </div>
                     <p id="manualResult" class="text-sm text-center text-gray-500"></p>
@@ -208,30 +210,45 @@
 
     function cariManual() {
         const kode = document.getElementById('manualKode').value.trim();
-        if (!kode) { alert('Masukkan kode barang'); return; }
-        window.location.href = '/scan/' + encodeURIComponent(kode);
+        if (!kode) { if (window.toast) window.toast('Masukkan kode barang', 'error'); return; }
+        window.location.href = '/scan/' + encodeURIComponent(kode.toUpperCase());
+    }
+    function clearManual() {
+        document.getElementById('manualKode').value = '';
+        document.getElementById('manualResult').textContent = '';
+        document.getElementById('manualKode').focus();
+    }
+    function retryCamera() {
+        const errDiv = document.getElementById('cameraError');
+        errDiv.classList.add('hidden');
+        stopCamera();
+        setTimeout(startCamera, 200);
     }
 
+    document.getElementById('manualKode').addEventListener('input', function() { this.value = this.value.toUpperCase(); });
     document.getElementById('manualKode').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') cariManual();
     });
 
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(startCamera, 500);
-        new DataTable('#scanRiwayatTable', {
-            language: {
-                processing: "Memproses...",
-                lengthMenu: "Tampilkan _MENU_ data",
-                zeroRecords: "Tidak ditemukan data yang sesuai",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-                search: "Cari:",
-                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-            },
-            order: [[3, 'desc']],
-            columnDefs: [{ orderable: false, targets: [0, 5] }],
-        });
+        const scanRiwayatTableEl = document.getElementById('scanRiwayatTable');
+        if (scanRiwayatTableEl && !scanRiwayatTableEl.querySelector('td[colspan]') && scanRiwayatTableEl.querySelectorAll('tbody tr').length) {
+            new DataTable('#scanRiwayatTable', {
+                language: {
+                    processing: "Memproses...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Tidak ditemukan data yang sesuai",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                    infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                    search: "Cari:",
+                    paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+                },
+                order: [[3, 'desc']],
+                columnDefs: [{ orderable: false, targets: [0, 5] }],
+            });
+        }
     });
 </script>
 @endpush

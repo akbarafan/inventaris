@@ -16,25 +16,25 @@
                 <h3 class="font-semibold text-gray-800">Identitas Sekolah</h3>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nama Sekolah</label>
-                    <input type="text" name="nama_sekolah" required value="{{ $settings['nama_sekolah'] ?? '' }}" placeholder="Contoh: SMK Negeri 1 Surabaya" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" name="nama_sekolah" required maxlength="100" autocomplete="off" value="{{ $settings['nama_sekolah'] ?? '' }}" placeholder="Contoh: SMK Negeri 1 Surabaya" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama Singkat</label>
-                        <input type="text" name="nama_singkat" value="{{ $settings['nama_singkat'] ?? '' }}" placeholder="Contoh: SMK" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" name="nama_singkat" maxlength="20" autocomplete="off" value="{{ $settings['nama_singkat'] ?? '' }}" placeholder="Contoh: SMK" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Telepon</label>
-                        <input type="text" name="telepon" value="{{ $settings['telepon'] ?? '' }}" placeholder="Contoh: 031-12345678" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" name="telepon" pattern="[0-9+\-\s()]*" maxlength="20" autocomplete="off" value="{{ $settings['telepon'] ?? '' }}" placeholder="Contoh: 031-12345678" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-                    <input type="text" name="alamat" value="{{ $settings['alamat'] ?? '' }}" placeholder="Alamat lengkap sekolah" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <textarea name="alamat" rows="2" placeholder="Alamat lengkap sekolah" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $settings['alamat'] ?? '' }}</textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Teks Footer</label>
-                    <input type="text" name="footer_text" value="{{ $settings['footer_text'] ?? '' }}" placeholder="Contoh: Sistem Informasi Inventaris - 2026" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" name="footer_text" maxlength="100" value="{{ $settings['footer_text'] ?? '' }}" placeholder="Contoh: Sistem Informasi Inventaris - 2026" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>
@@ -48,11 +48,17 @@
                 </div>
                 <input type="file" name="logo" id="logoInput" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 <p class="text-xs text-gray-400 mt-2">JPG/PNG/WebP maks 2MB. Kosongkan untuk mempertahankan logo saat ini.</p>
+                @if(!empty($settings['logo']))
+                <label class="flex items-center gap-2 mt-3 text-sm text-gray-600">
+                    <input type="checkbox" name="remove_logo" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                    Hapus logo saat ini
+                </label>
+                @endif
             </div>
         </div>
 
         <div class="lg:col-span-3 flex justify-end">
-            <button type="submit" class="btn-primary px-5 py-2.5">Simpan Pengaturan</button>
+            <button type="submit" id="settingsSubmitBtn" class="btn-primary px-5 py-2.5">Simpan Pengaturan</button>
         </div>
     </form>
 </div>
@@ -63,12 +69,19 @@
     document.getElementById('logoInput').addEventListener('change', function() {
         const file = this.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { alert('Logo maksimal 2MB'); this.value = ''; return; }
+        if (file.size > 2 * 1024 * 1024) { if (window.toast) window.toast('Logo maksimal 2MB', 'error'); else alert('Logo maksimal 2MB'); this.value = ''; return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('logoPreview').src = e.target.result;
         };
         reader.readAsDataURL(file);
     });
+    const settingsForm = document.querySelector('form[enctype="multipart/form-data"]');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function() {
+            const btn = document.getElementById('settingsSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan\u2026'; }
+        });
+    }
 </script>
 @endpush

@@ -88,11 +88,13 @@
             <input type="hidden" id="userId">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                <input type="text" id="userName" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="userName" required maxlength="50" autocomplete="name" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nama lengkap">
+                <p id="userNameError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="userEmail" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="email" id="userEmail" required maxlength="100" autocomplete="email" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="email@contoh.com">
+                <p id="userEmailError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -111,12 +113,18 @@
             </div>
             <div id="passwordField">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" id="userPassword" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="relative">
+                    <input type="password" id="userPassword" autocomplete="new-password" maxlength="100" class="form-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Minimal 6 karakter">
+                    <button type="button" onclick="togglePassword('userPassword', this)" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" title="Lihat password">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
                 <p class="text-xs text-gray-400 mt-1" id="passwordHint">Minimal 6 karakter. Kosongkan jika tidak ingin mengubah.</p>
+                <p id="userPasswordError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeUserModal()" class="btn-secondary text-sm px-4 py-2">Batal</button>
-                <button type="submit" class="btn-primary text-sm px-4 py-2">Simpan</button>
+                <button type="submit" id="userSubmitBtn" class="btn-primary text-sm px-4 py-2">Simpan</button>
             </div>
         </form>
     </div>
@@ -135,11 +143,17 @@
             <input type="hidden" id="resetPassUserId">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
-                <input type="password" id="resetPassValue" required minlength="6" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="relative">
+                    <input type="password" id="resetPassValue" required minlength="6" maxlength="100" autocomplete="new-password" class="form-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Minimal 6 karakter">
+                    <button type="button" onclick="togglePassword('resetPassValue', this)" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600" title="Lihat password">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+                <p id="resetPassError" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeResetModal()" class="btn-secondary text-sm px-4 py-2">Batal</button>
-                <button type="submit" class="btn-primary text-sm px-4 py-2">Reset</button>
+                <button type="submit" id="resetPassSubmitBtn" class="btn-primary text-sm px-4 py-2">Reset</button>
             </div>
         </form>
     </div>
@@ -148,29 +162,44 @@
 
 @push('scripts')
 <script>
-    new DataTable('#usersTable', {
-        language: {
-            processing: "Memproses...",
-            lengthMenu: "Tampilkan _MENU_ data",
-            zeroRecords: "Tidak ditemukan data yang sesuai",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-            search: "Cari:",
-            paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-        },
-        order: [[0, 'asc']],
-        columnDefs: [{ orderable: false, targets: [4] }],
-    });
+    const usersTableEl = document.getElementById('usersTable');
+    if (usersTableEl && !usersTableEl.querySelector('td[colspan]') && usersTableEl.querySelectorAll('tbody tr').length) {
+        new DataTable('#usersTable', {
+            language: {
+                processing: "Memproses...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                search: "Cari:",
+                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+            },
+            order: [[0, 'asc']],
+            columnDefs: [{ orderable: false, targets: [4] }],
+        });
+    }
 
     const csrfUser = () => document.querySelector('meta[name="csrf-token"]').content;
     const post = (url, opts = {}) => fetch(url, {
         method: opts.method || 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfUser(), 'Accept': 'application/json' },
         body: opts.body ? JSON.stringify(opts.body) : undefined,
-    }).then(r => r.json());
+    }).then(async r => {
+        const data = await r.json();
+        return { ok: r.ok, status: r.status, data };
+    });
+    
+    function showErr(id, msg) { const el = document.getElementById(id); if (!el) return; if (msg) { el.textContent = msg; el.classList.remove('hidden'); } else { el.textContent = ''; el.classList.add('hidden'); } }
+    function clearUserErrors() { showErr('userNameError',''); showErr('userEmailError',''); showErr('userPasswordError',''); document.getElementById('userName').classList.remove('border-red-500'); document.getElementById('userEmail').classList.remove('border-red-500'); }
+    function togglePassword(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        if (!inp) return;
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
 
     function openUserModal() {
+        clearUserErrors();
         document.getElementById('userModalTitle').textContent = 'Tambah Pengguna';
         document.getElementById('userId').value = '';
         document.getElementById('userName').value = '';
@@ -182,9 +211,11 @@
         document.getElementById('userActive').value = '1';
         document.getElementById('passwordField').style.display = '';
         document.getElementById('userModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('userName').focus(), 50);
     }
 
     function editUser(id) {
+        clearUserErrors();
         fetch('/users/' + id + '/edit', { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(u => {
@@ -199,6 +230,7 @@
                 document.getElementById('passwordHint').textContent = 'Kosongkan jika tidak ingin mengubah password.';
                 document.getElementById('userModal').classList.remove('hidden');
                 document.getElementById('userPassword').closest('div').style.display = 'none';
+                setTimeout(() => document.getElementById('userName').focus(), 50);
             });
     }
 
@@ -206,10 +238,15 @@
         document.getElementById('userModal').classList.add('hidden');
         document.getElementById('userPassword').removeAttribute('required');
         document.getElementById('userPassword').closest('div').style.display = '';
+        clearUserErrors();
     }
 
     document.getElementById('userForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        clearUserErrors();
+        const btn = document.getElementById('userSubmitBtn');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Menyimpan\u2026';
         const id = document.getElementById('userId').value;
         const body = {
             name: document.getElementById('userName').value,
@@ -220,34 +257,61 @@
         };
         const url = id ? '/users/' + id : '/users';
         const method = id ? 'PUT' : 'POST';
-        post(url, { method, body }).then(res => {
-            if (res.success) { location.reload(); } else { alert(res.message || 'Gagal menyimpan'); }
-        });
+        post(url, { method, body }).then(({ ok, data }) => {
+            if (ok && data.success) { window.toast(data.message || 'Berhasil disimpan', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+            else {
+                if (data.errors) {
+                    if (data.errors.name) { showErr('userNameError', data.errors.name[0]); document.getElementById('userName').classList.add('border-red-500'); }
+                    if (data.errors.email) { showErr('userEmailError', data.errors.email[0]); document.getElementById('userEmail').classList.add('border-red-500'); }
+                    if (data.errors.password) { showErr('userPasswordError', data.errors.password[0]); }
+                    const first = Object.values(data.errors).flat()[0];
+                    window.toast(data.message || first || 'Validasi gagal', 'error');
+                } else {
+                    window.toast(data.message || 'Gagal menyimpan', 'error');
+                }
+            }
+        }).catch(() => window.toast('Terjadi kesalahan, coba lagi.', 'error'))
+        .finally(() => { btn.disabled = false; btn.textContent = origText; });
     });
 
     function resetPassUser(id) {
+        showErr('resetPassError','');
         document.getElementById('resetPassUserId').value = id;
         document.getElementById('resetPassValue').value = '';
         document.getElementById('resetPassModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('resetPassValue').focus(), 50);
     }
 
     function closeResetModal() {
         document.getElementById('resetPassModal').classList.add('hidden');
+        showErr('resetPassError','');
     }
 
     document.getElementById('resetPassForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        showErr('resetPassError','');
+        const btn = document.getElementById('resetPassSubmitBtn');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Menyimpan\u2026';
         const id = document.getElementById('resetPassUserId').value;
         const password = document.getElementById('resetPassValue').value;
         post('/users/' + id + '/reset-password', { body: { password } })
-            .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal reset password'); });
+            .then(({ ok, data }) => {
+                if (ok && data.success) { window.toast(data.message || 'Password berhasil direset', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+                else {
+                    if (data.errors && data.errors.password) showErr('resetPassError', data.errors.password[0]);
+                    window.toast(data.message || 'Gagal reset password', 'error');
+                }
+            }).catch(() => window.toast('Terjadi kesalahan, coba lagi.', 'error'))
+            .finally(() => { btn.disabled = false; btn.textContent = origText; });
     });
 
     function hapusUser(id, name) {
         if (!confirm('Hapus pengguna "' + name + '"? Tindakan ini tidak bisa dibatalkan.')) return;
-        post('/users/' + id, { method: 'DELETE' }).then(res => {
-            if (res.success) location.reload(); else alert(res.message || 'Gagal menghapus');
-        });
+        post('/users/' + id, { method: 'DELETE' }).then(({ ok, data }) => {
+            if (ok && data.success) { window.toast(data.message || 'Pengguna dihapus', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; } else window.toast(data.message || 'Gagal menghapus', 'error');
+        }).catch(() => window.toast('Terjadi kesalahan, coba lagi.', 'error'));
     }
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeUserModal(); closeResetModal(); } });
 </script>
 @endpush

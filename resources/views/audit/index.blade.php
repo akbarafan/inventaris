@@ -83,19 +83,22 @@
 
 @push('scripts')
 <script>
-    new DataTable('#auditTable', {
-        language: {
-            processing: "Memproses...",
-            lengthMenu: "Tampilkan _MENU_ data",
-            zeroRecords: "Tidak ditemukan data yang sesuai",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-            search: "Cari:",
-            paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-        },
-        order: [[0, 'desc']],
-        columnDefs: [{ orderable: false, targets: [4] }],
-    });
+    const auditTableEl = document.getElementById('auditTable');
+    if (auditTableEl && !auditTableEl.querySelector('td[colspan]') && auditTableEl.querySelectorAll('tbody tr').length) {
+        new DataTable('#auditTable', {
+            language: {
+                processing: "Memproses...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                search: "Cari:",
+                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+            },
+            order: [[0, 'desc']],
+            columnDefs: [{ orderable: false, targets: [4] }],
+        });
+    }
 </script>
 @endpush
