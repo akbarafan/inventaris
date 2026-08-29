@@ -8,6 +8,10 @@ class Sumber extends Model
 {
     protected $fillable = ['nama_sumber', 'kode'];
 
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     public function barangs()
     {
         return $this->hasMany(Barang::class, 'sumber_id');

@@ -19,7 +19,7 @@ class LokasiSeeder extends Seeder
         ];
 
         foreach ($lokasis as $nama) {
-            Lokasi::create(['nama_lokasi' => $nama]);
+            Lokasi::firstOrCreate(['nama_lokasi' => $nama]);
         }
     }
 }

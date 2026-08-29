@@ -19,6 +19,17 @@ class Barang extends Model
         'keterangan', 'tanggal_masuk',
     ];
 
+    protected $casts = [
+        'jumlah' => 'integer',
+        'baik' => 'integer',
+        'rusak' => 'integer',
+        'rusak_berat' => 'integer',
+        'tanggal_masuk' => 'date',
+        'kategori_id' => 'integer',
+        'lokasi_id' => 'integer',
+        'sumber_id' => 'integer',
+    ];
+
     public function kategori()
     {
         return $this->belongsTo(Kategori::class, 'kategori_id');

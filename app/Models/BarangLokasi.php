@@ -12,6 +12,15 @@ class BarangLokasi extends Model
         'barang_id', 'lokasi_id', 'jumlah', 'baik', 'rusak', 'rusak_berat',
     ];
 
+    protected $casts = [
+        'barang_id' => 'integer',
+        'lokasi_id' => 'integer',
+        'jumlah' => 'integer',
+        'baik' => 'integer',
+        'rusak' => 'integer',
+        'rusak_berat' => 'integer',
+    ];
+
     public function barang()
     {
         return $this->belongsTo(Barang::class, 'barang_id');

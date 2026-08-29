@@ -8,6 +8,10 @@ class Kategori extends Model
 {
     protected $fillable = ['nama_kategori', 'kode'];
 
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     public function barangs()
     {
         return $this->hasMany(Barang::class, 'kategori_id');

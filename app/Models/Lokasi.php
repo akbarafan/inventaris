@@ -8,6 +8,10 @@ class Lokasi extends Model
 {
     protected $fillable = ['nama_lokasi', 'kode'];
 
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     public function barangLokasis()
     {
         return $this->hasMany(BarangLokasi::class, 'lokasi_id');
