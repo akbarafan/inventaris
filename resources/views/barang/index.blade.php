@@ -63,7 +63,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @foreach($barangs as $b)
+                    @forelse($barangs as $b)
                     <tr class="hover:bg-gray-50 transition-colors" data-id="{{ $b->id }}">
                         <td class="px-4 py-3"><input type="checkbox" class="cb-barang" value="{{ $b->kode_barang }}"></td>
                         <td class="px-4 py-3 text-gray-500">{{ $loop->iteration }}</td>
@@ -90,14 +90,20 @@
                                 <button onclick="openMutasi({{ $b->id }})" class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Mutasi / Pindah Lokasi">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 6l-2 2m2-2l2 2m14 10H4m16 0l-2 2m2-2l-2-2M9 3v6m0 0L7 7m2 2l2-2m4 5v6m0 0l-2-2m2 2l2-2"/></svg>
                                 </button>
-                                <button onclick="hapusBarang({{ $b->id }})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                <button onclick="hapusBarang({{ $b->id }}, '{{ addslashes($b->nama_barang) }}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                                 @endif
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr><td colspan="11" class="py-12 text-center">
+                        <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293H8.586a1 1 0 00-.707.293l-2.414 2.414A1 1 0 005 21h14a2 2 0 002-2v-5z"/></svg>
+                        <p class="text-gray-400 text-sm">Belum ada barang</p>
+                        <button onclick="openModal('barangModal')" class="mt-2 text-blue-600 text-sm font-medium hover:underline">+ Tambah pertama</button>
+                    </td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -117,8 +123,9 @@
             <input type="hidden" id="barangId">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
-                    <input type="text" id="namaBarang" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang <span class="text-red-500">*</span></label>
+                    <input type="text" id="namaBarang" required maxlength="255" minlength="2" autocomplete="off" spellcheck="false" placeholder="Contoh: Proyektor Epson" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p id="nama_barangError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang</label>
@@ -132,6 +139,7 @@
                         <option value="{{ $k->id }}" data-kode="{{ $k->kode }}">{{ $k->nama_kategori }}</option>
                         @endforeach
                     </select>
+                    <p id="kategori_idError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Sumber</label>
@@ -141,10 +149,12 @@
                         <option value="{{ $s->id }}">{{ $s->nama_sumber }}</option>
                         @endforeach
                     </select>
+                    <p id="sumber_idError" class="field-error hidden"></p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
-                    <input type="date" id="tanggalMasuk" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk <span class="text-red-500">*</span></label>
+                    <input type="date" id="tanggalMasuk" required max="{{ now()->format('Y-m-d') }}" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p id="tanggal_masukError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
@@ -154,17 +164,20 @@
                         <option value="{{ $l->id }}" data-kode="{{ $l->kode }}">{{ $l->nama_lokasi }}</option>
                         @endforeach
                     </select>
+                    <p id="lokasi_idError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
-                    <textarea id="keteranganBarang" rows="2" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <textarea id="keteranganBarang" rows="2" maxlength="1000" placeholder="Keterangan tambahan (opsional)" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <p id="keteranganError" class="field-error hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Foto Barang</label>
-                    <input type="file" id="fotoBarang" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    <p class="text-xs text-gray-400 mt-1">Maksimal 1MB, format JPG/PNG</p>
+                    <input type="file" id="fotoBarang" accept="image/jpeg,image/png,image/jpg,image/webp" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-400 mt-1">Maksimal 1MB, format JPG/PNG/WebP</p>
                     <p id="fotoError" class="text-xs text-red-500 mt-1 hidden"></p>
                     <img id="fotoPreview" class="mt-2 w-24 h-24 object-cover rounded-lg border border-gray-200 hidden">
+                    <button type="button" id="hapusFotoBtn" onclick="hapusFotoPreview()" class="hidden mt-1 text-xs text-red-500 hover:text-red-700">Hapus foto</button>
                 </div>
             </div>
 
@@ -181,15 +194,15 @@
                         <tbody class="divide-y divide-gray-100">
                             <tr>
                                 <td class="px-4 py-2">Baik</td>
-                                <td class="px-4 py-2"><input type="number" id="kondisiBaik" value="0" min="0" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
+                                <td class="px-4 py-2"><input type="number" id="kondisiBaik" value="0" min="0" max="99999" step="1" inputmode="numeric" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
                             </tr>
                             <tr>
                                 <td class="px-4 py-2">Rusak</td>
-                                <td class="px-4 py-2"><input type="number" id="kondisiRusak" value="0" min="0" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
+                                <td class="px-4 py-2"><input type="number" id="kondisiRusak" value="0" min="0" max="99999" step="1" inputmode="numeric" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
                             </tr>
                             <tr>
                                 <td class="px-4 py-2">Rusak Berat</td>
-                                <td class="px-4 py-2"><input type="number" id="kondisiRusakBerat" value="0" min="0" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
+                                <td class="px-4 py-2"><input type="number" id="kondisiRusakBerat" value="0" min="0" max="99999" step="1" inputmode="numeric" class="form-input w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center" oninput="hitungTotalKondisi()"></td>
                             </tr>
                             <tr class="bg-gray-50 font-semibold">
                                 <td class="px-4 py-2">TOTAL</td>
@@ -203,7 +216,7 @@
 
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeModal('barangModal')" class="btn-secondary text-sm px-4 py-2">Batal</button>
-                <button type="submit" class="btn-primary text-sm px-4 py-2">Simpan</button>
+                <button type="submit" id="barangSubmitBtn" class="btn-primary text-sm px-4 py-2">Simpan</button>
             </div>
         </form>
     </div>
@@ -237,6 +250,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Pilih File CSV</label>
                 <input type="file" id="fileImport" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 <p class="text-xs text-gray-400 mt-1" id="importFileName"></p>
+                <a href="#" onclick="downloadTemplate(); return false;" class="text-xs text-blue-600 hover:underline mt-1 inline-block">Download template CSV</a>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Default</label>
@@ -258,6 +272,16 @@
                 </select>
                 <p class="text-xs text-gray-400 mt-1">Sumber default untuk semua barang import</p>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Tujuan <span class="text-red-500">*</span></label>
+                <select id="importLokasi" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Pilih Lokasi</option>
+                    @foreach($lokasis ?? [] as $l)
+                    <option value="{{ $l->id }}">{{ $l->nama_lokasi }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Lokasi tujuan untuk semua barang import</p>
+            </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('importModal')" class="btn-secondary text-sm px-4 py-2">Batal</button>
                 <button type="button" id="previewBtn" class="btn-primary text-sm px-4 py-2" disabled>Preview</button>
@@ -265,7 +289,7 @@
         </div>
         <div class="p-5 space-y-4 hidden" id="importStep2">
             <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-gray-700">Ruang: <span id="importRuang" class="font-semibold"></span></p>
+                <p class="text-sm font-medium text-gray-700">Lokasi: <span id="importRuang" class="font-semibold"></span></p>
                 <p class="text-sm text-gray-500"><span id="importRowCount">0</span> barang</p>
             </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
@@ -353,6 +377,8 @@
 @push('scripts')
 <script>
     let editingId = null;
+    let selectedKodes = new Set();
+    const ALL_KODES = @json($barangs->pluck('kode_barang')->values());
 
     function previewKode() {
         const nama = document.getElementById('namaBarang').value;
@@ -383,6 +409,7 @@
     document.getElementById('fotoBarang').addEventListener('change', function() {
         const file = this.files[0];
         const preview = document.getElementById('fotoPreview');
+        const hapusBtn = document.getElementById('hapusFotoBtn');
         const errEl = document.getElementById('fotoError');
         errEl.classList.add('hidden');
         if (file) {
@@ -391,35 +418,46 @@
                 errEl.classList.remove('hidden');
                 this.value = '';
                 preview.classList.add('hidden');
+                hapusBtn.classList.add('hidden');
                 return;
             }
-            const allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+            const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
             if (!allowed.includes(file.type)) {
-                errEl.textContent = 'Format harus JPG atau PNG';
+                errEl.textContent = 'Format harus JPG, PNG, atau WebP';
                 errEl.classList.remove('hidden');
                 this.value = '';
                 preview.classList.add('hidden');
+                hapusBtn.classList.add('hidden');
                 return;
             }
             const reader = new FileReader();
-            reader.onload = e => { preview.src = e.target.result; preview.classList.remove('hidden'); };
+            reader.onload = e => { preview.src = e.target.result; preview.classList.remove('hidden'); hapusBtn.classList.remove('hidden'); };
             reader.readAsDataURL(file);
         } else {
             preview.classList.add('hidden');
+            hapusBtn.classList.add('hidden');
         }
     });
 
+    function hapusFotoPreview() {
+        document.getElementById('fotoBarang').value = '';
+        document.getElementById('fotoPreview').classList.add('hidden');
+        document.getElementById('hapusFotoBtn').classList.add('hidden');
+    }
+
     document.getElementById('barangForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        const btn = document.getElementById('barangSubmitBtn');
+        window.clearFieldErrors?.();
         const id = document.getElementById('barangId').value;
-        const method = id ? 'PUT' : 'POST';
         const url = id ? `/barang/${id}` : '/barang';
 
         const total = parseInt(document.getElementById('totalKondisi').textContent) || 0;
         const fd = new FormData();
         fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         fd.append('nama_barang', document.getElementById('namaBarang').value);
-        fd.append('kode_barang', document.getElementById('kodeBarangDisplay').value);
+        const kodeVal = document.getElementById('kodeBarangDisplay').value;
+        if (kodeVal && !kodeVal.startsWith('(')) fd.append('kode_barang', kodeVal);
         fd.append('kategori_id', document.getElementById('kategoriBarang').value);
         fd.append('sumber_id', document.getElementById('sumberBarang').value);
         fd.append('tanggal_masuk', document.getElementById('tanggalMasuk').value);
@@ -433,19 +471,28 @@
         if (foto) fd.append('foto', foto);
         if (id) fd.append('_method', 'PUT');
 
+        window.setBtnLoading?.(btn, true, 'Menyimpan...');
+
         fetch(url, {
             method: 'POST',
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: fd
         })
-        .then(r => r.text().then(t => ({ ok: r.ok, status: r.status, text: t })))
-        .then(({ ok, status, text }) => {
-            if (!ok) { alert('Error ' + status + ': ' + text.slice(0, 300)); return; }
-            const res = JSON.parse(text);
-            if (res.success) { location.reload(); }
-            else { alert(res.message || 'Gagal menyimpan data'); }
+        .then(async r => {
+            const text = await r.text();
+            let data;
+            try { data = JSON.parse(text); } catch { data = { message: text.slice(0, 300) }; }
+            if (!r.ok) {
+                try { if (r.status === 422 && data.errors) window.showFieldErrors?.(data.errors); } catch {}
+                try { window.toast?.(data.message || 'Gagal menyimpan data', 'error'); } catch {}
+                return;
+            }
+            try { window.toast?.(data.message || 'Berhasil!', 'success'); } catch {}
+            closeModal('barangModal');
+            if(window.refreshPage){window.refreshPage()}else{location.reload()};
         })
-        .catch(e => alert('Gagal: ' + e.message));
+        .catch(err => { try { window.toast?.('Gagal: ' + err.message, 'error'); } catch {} })
+        .finally(() => { try { window.setBtnLoading?.(btn, false); } catch {} if(btn){ btn.disabled=false; btn.textContent='Simpan'; } });
     });
 
     function editBarang(id) {
@@ -498,21 +545,22 @@
         .then(data => {
             const fotoUrl = data.foto ? `/storage/${data.foto}` : null;
             const placeholder = 'https://placehold.co/200x200/e2e8f0/64748b?text=No+Image';
+            const e = window.escapeHtml;
             const kondisi = [
                 { label: 'Baik', count: data.baik, cls: 'badge-baik' },
                 { label: 'Rusak', count: data.rusak, cls: 'badge-rusak' },
                 { label: 'Rusak Berat', count: data.rusak_berat, cls: 'badge-rusakberat' },
             ];
-            const lokasiNama = data.lokasi?.nama_lokasi || data.barang_lokasis?.[0]?.lokasi?.nama_lokasi || '-';
+            const lokasiNama = e(data.lokasi?.nama_lokasi || data.barang_lokasis?.[0]?.lokasi?.nama_lokasi || '-');
             document.getElementById('detailContent').innerHTML = `
                 <div class="flex flex-col lg:flex-row gap-6">
                     <div class="shrink-0 space-y-3" style="width:96px">
-                        <img src="${fotoUrl || placeholder}" alt="Foto ${data.nama_barang}" class="w-24 h-24 object-cover rounded-lg border border-gray-200 bg-gray-50" onerror="this.src='${placeholder}'">
-                        <a href="/barang/${data.kode_barang}/qr" class="btn-outline text-sm px-3 py-1.5 w-full flex items-center justify-center gap-1.5" target="_blank">
+                        <img src="${fotoUrl || placeholder}" alt="Foto ${e(data.nama_barang)}" class="w-24 h-24 object-cover rounded-lg border border-gray-200 bg-gray-50" onerror="this.src='${placeholder}'">
+                        <a href="/barang/${e(data.kode_barang)}/qr" class="btn-outline text-sm px-3 py-1.5 w-full flex items-center justify-center gap-1.5" target="_blank">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 16a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm10-1a1 1 0 00-1 1v1h-1a1 1 0 000 2h1v1a1 1 0 002 0v-1h1a1 1 0 000-2h-1v-1a1 1 0 00-1-1z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13v4m-2-2h4"/></svg>
                             Download QR
                         </a>
-                        <a href="/barang/print-label?kodes=${data.kode_barang}" target="_blank" class="btn-outline text-sm px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
+                        <a href="/barang/print-label?kodes=${e(data.kode_barang)}" target="_blank" class="btn-outline text-sm px-3 py-1.5 w-full flex items-center justify-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14h12v6H6z"/></svg>
                             Cetak Label
                         </a>
@@ -521,15 +569,15 @@
                         <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                             <div class="col-span-2">
                                 <span class="text-gray-500 text-xs">Nama Barang</span>
-                                <p class="font-semibold text-gray-800">${data.nama_barang}</p>
+                                <p class="font-semibold text-gray-800">${e(data.nama_barang)}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Kode Barang</span>
-                                <p class="font-mono font-medium">${data.kode_barang}</p>
+                                <p class="font-mono font-medium">${e(data.kode_barang)}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Kategori</span>
-                                <p class="font-medium">${data.kategori?.nama_kategori || '-'}</p>
+                                <p class="font-medium">${e(data.kategori?.nama_kategori) || '-'}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Lokasi</span>
@@ -537,7 +585,7 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Sumber</span>
-                                <p class="font-medium">${data.sumber?.nama_sumber || '-'}</p>
+                                <p class="font-medium">${e(data.sumber?.nama_sumber) || '-'}</p>
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Jumlah Total</span>
@@ -545,16 +593,16 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 text-xs">Tanggal Masuk</span>
-                                <p class="font-medium">${data.tanggal_masuk || '-'}</p>
+                                <p class="font-medium">${e(data.tanggal_masuk) || '-'}</p>
                             </div>
                             <div class="col-span-2">
                                 <span class="text-gray-500 text-xs">Keterangan</span>
-                                <p class="font-medium">${data.keterangan || '-'}</p>
+                                <p class="font-medium">${e(data.keterangan) || '-'}</p>
                             </div>
                         </div>
                         <div class="border-t border-gray-100 pt-3">
                             <span class="text-xs text-gray-500 block mb-2">Rincian Kondisi</span>
-                            <div class="flex flex-wrap gap-2">${kondisi.map(k => `<span class="${k.cls}">${k.label}: ${k.count}</span>`).join('')}</div>
+                            <div class="flex flex-wrap gap-2">${kondisi.map(k => `<span class="${k.cls}">${e(k.label)}: ${k.count}</span>`).join('')}</div>
                         </div>
                     </div>
                 </div>
@@ -563,14 +611,18 @@
         });
     }
 
-    function hapusBarang(id) {
-        if (!confirm('Yakin ingin menghapus barang ini?')) return;
+    function hapusBarang(id, nama) {
+        if (!confirm(`Yakin ingin menghapus barang "${nama || ''}" ?`)) return;
         fetch(`/barang/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
         })
-        .then(r => r.json())
-        .then(res => { if (res.success) location.reload(); });
+        .then(async r => {
+            const data = await r.json().catch(() => ({}));
+            if (r.ok && data.success) { window.toast(data.message || 'Berhasil dihapus', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+            else window.toast(data.message || 'Gagal menghapus', 'error');
+        })
+        .catch(() => window.toast('Gagal menghapus', 'error'));
     }
 
     let importRows = [];
@@ -583,19 +635,28 @@
     });
 
     document.getElementById('previewBtn').addEventListener('click', function() {
+        const lokasiSel = document.getElementById('importLokasi');
+        if (!lokasiSel.value) { window.toast('Pilih lokasi tujuan terlebih dahulu.', 'error'); lokasiSel.focus(); return; }
         const file = document.getElementById('fileImport').files[0];
         if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { window.toast('File terlalu besar (maks 5MB)', 'error'); return; }
+        const btn = this;
+        window.setBtnLoading(btn, true, 'Memproses...');
         const reader = new FileReader();
         reader.onload = function(e) {
+            window.setBtnLoading(btn, false);
             const text = e.target.result;
             const lines = text.split(/\r?\n/);
             let ruang = null;
             let dataStart = false;
             let colIdx = null;
+            let delimiter = ',';
+            const headerLine = lines.find(l => l.toLowerCase().includes('nama_barang') || l.toLowerCase().includes('nama barang'));
+            if (headerLine && (headerLine.split(';').length > headerLine.split(',').length)) delimiter = ';';
             const rows = [];
 
             for (let i = 0; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+                const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"(.*)"$/, '$1'));
                 const joined = cols.join(' ');
 
                 if (!ruang) {
@@ -648,10 +709,11 @@
                 }
             }
 
-            if (rows.length === 0) { alert('Tidak ada data yang ditemukan di file CSV.'); return; }
+            if (rows.length === 0) { window.toast('Tidak ada data yang ditemukan di file CSV.', 'error'); return; }
+            if (rows.length > 500) { window.toast('Maksimal 500 baris per import. File ini memiliki ' + rows.length + ' baris — hanya 500 pertama akan diproses.', 'warning'); rows.splice(500); }
 
             importRows = rows;
-            document.getElementById('importRuang').textContent = ruang || '(tidak diketahui)';
+            document.getElementById('importRuang').textContent = lokasiSel.options[lokasiSel.selectedIndex].text;
             document.getElementById('importRowCount').textContent = rows.length;
 
             const kategoris = @json($kategoris);
@@ -663,13 +725,14 @@
             sumbers.forEach(s => sumberById[s.id] = s.nama_sumber);
             const sumberByName = {};
             sumbers.forEach(s => sumberByName[s.nama_sumber.toLowerCase()] = s.id);
+            const esc = window.escapeHtml;
             tbody.innerHTML = rows.map((r, i) => {
                 const katOpts = kategoris.map(k =>
-                    `<option value="${k.id}" ${k.id == defaultKat ? 'selected' : ''}>${k.nama_kategori}</option>`
+                    `<option value="${k.id}" ${k.id == defaultKat ? 'selected' : ''}>${esc(k.nama_kategori)}</option>`
                 ).join('');
                 const rowSumberId = sumberByName[(r.sumber || '').toLowerCase()] || defaultSumber;
                 const srcOpts = `<option value="">Pilih</option>` + sumbers.map(s =>
-                    `<option value="${s.id}" ${String(s.id) === String(rowSumberId) ? 'selected' : ''}>${s.nama_sumber}</option>`
+                    `<option value="${s.id}" ${String(s.id) === String(rowSumberId) ? 'selected' : ''}>${esc(s.nama_sumber)}</option>`
                 ).join('');
                 const total = (r.baik || 0) + (r.rusak || 0) + (r.rusakBerat || 0);
                 const mismatch = total !== r.jumlah;
@@ -680,7 +743,7 @@
                     : '');
                 return `<tr>
                     <td class="px-3 py-2 text-gray-500 text-center">${i + 1}</td>
-                    <td class="px-3 py-2 font-medium text-gray-800">${r.nama}</td>
+                    <td class="px-3 py-2 font-medium text-gray-800">${esc(r.nama)}</td>
                     <td class="px-3 py-2 text-center whitespace-nowrap">${jmlCell}</td>
                     <td class="px-3 py-2 text-center">
                         <input type="number" min="0" value="${r.baik || 0}" class="import-kondisi import-baik w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -759,8 +822,9 @@
     });
 
     document.getElementById('importBtn').addEventListener('click', function() {
+        const btn = this;
         const trs = document.querySelectorAll('#importPreviewBody tr');
-        if (trs.length === 0) { alert('Tidak ada barang untuk diimport.'); return; }
+        if (trs.length === 0) { window.toast('Tidak ada barang untuk diimport.', 'warning'); return; }
 
         const rows = [];
         let valid = true;
@@ -784,36 +848,79 @@
             });
         });
 
-        if (!valid) { alert('Semua barang harus memiliki kategori.'); return; }
+        if (!valid) { window.toast('Semua barang harus memiliki kategori.', 'error'); return; }
 
-        const ruang = document.getElementById('importRuang').textContent;
+        const lokasi_id = document.getElementById('importLokasi').value;
         const sumber_id = document.getElementById('importSumber').value;
+        window.setBtnLoading(btn, true, 'Mengimpor...');
         fetch('/barang/import-csv', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
-            body: JSON.stringify({ ruang, sumber_id: sumber_id || null, rows })
+            body: JSON.stringify({ lokasi_id, sumber_id: sumber_id || null, rows })
         })
-        .then(r => r.json())
-        .then(res => { if (res.success) location.reload(); else alert(res.message || 'Gagal import'); });
+        .then(async r => {
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) { if (r.status === 422 && data.errors) window.showFieldErrors(data.errors); window.toast(data.message || 'Gagal import', 'error'); return; }
+            if (data.success) { window.toast(data.message || 'Import berhasil!', 'success'); if (data.errors && data.errors.length) data.errors.forEach(e => window.toast(e, 'warning')); window.refreshPage(600); }
+            else window.toast(data.message || 'Gagal import', 'error');
+        })
+        .catch(() => window.toast('Gagal import', 'error'))
+        .finally(() => window.setBtnLoading(btn, false));
     });
 
-    function toggleAllCheckbox(src) {
-        document.querySelectorAll('.cb-barang').forEach(cb => cb.checked = src.checked);
+    function downloadTemplate() {
+        const csv = "No,Nama Barang,Jumlah,Baik,Rusak,Rusak Berat,Keterangan,Sumber\n1,Contoh Proyektor,5,4,1,0,Keterangan, BOS\n";
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'template_import_barang.csv'; a.click();
+        URL.revokeObjectURL(url);
     }
 
+    function toggleAllCheckbox(src) {
+        if (src.checked) {
+            ALL_KODES.forEach(k => selectedKodes.add(k));
+        } else {
+            selectedKodes.clear();
+        }
+        syncCheckboxUI();
+    }
+
+    function syncCheckboxUI() {
+        document.querySelectorAll('.cb-barang').forEach(cb => {
+            cb.checked = selectedKodes.has(cb.value);
+        });
+        const checkAll = document.getElementById('checkAll');
+        if (checkAll) {
+            checkAll.checked = ALL_KODES.length > 0 && ALL_KODES.every(k => selectedKodes.has(k));
+        }
+    }
+
+    document.getElementById('barangTable')?.addEventListener('change', function(e) {
+        if (e.target && e.target.classList && e.target.classList.contains('cb-barang')) {
+            if (e.target.checked) selectedKodes.add(e.target.value);
+            else selectedKodes.delete(e.target.value);
+            const checkAll = document.getElementById('checkAll');
+            if (checkAll) {
+                checkAll.checked = ALL_KODES.length > 0 && ALL_KODES.every(k => selectedKodes.has(k));
+            }
+        }
+    });
+
     function cetakTerpilih() {
-        const codes = [];
-        document.querySelectorAll('.cb-barang:checked').forEach(cb => codes.push(cb.value));
-        if (codes.length === 0) { alert('Pilih barang terlebih dahulu.'); return; }
-        window.open('/barang/print-label?kodes=' + codes.join(','), '_blank');
+        const codes = Array.from(selectedKodes);
+        if (codes.length === 0) { window.toast('Pilih barang terlebih dahulu.', 'warning'); return; }
+        window.open('/barang/print-label?kodes=' + encodeURIComponent(codes.join(',')), '_blank');
     }
 
     function openModal(id) {
         if (id === 'barangModal' && !editingId) resetBarangForm();
-        document.getElementById(id).classList.remove('hidden');
+        const el = document.getElementById(id);
+        el.classList.remove('hidden');
+        setTimeout(() => { const f = el.querySelector('input[required], select[required]'); if (f) f.focus(); }, 80);
     }
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
+        window.clearFieldErrors();
     }
 
     function openMutasi(id) {
@@ -834,6 +941,8 @@
 
     document.getElementById('mutasiForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        window.setBtnLoading(btn, true, 'Menyimpan...');
         const id = document.getElementById('mutasiBarangId').value;
         fetch('/barang/' + id + '/mutasi', {
             method: 'POST',
@@ -851,34 +960,44 @@
                 keterangan: document.getElementById('mutasiKeterangan').value,
             })
         })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) { alert('Mutasi berhasil!'); location.reload(); }
-            else alert(res.message || 'Gagal melakukan mutasi');
-        });
+        .then(async r => {
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) { if (r.status === 422 && data.errors) window.showFieldErrors(data.errors); window.toast(data.message || 'Gagal melakukan mutasi', 'error'); return; }
+            if (data.success) { window.toast('Mutasi berhasil!', 'success'); if(window.refreshPage){window.refreshPage()}else{location.reload()}; }
+            else window.toast(data.message || 'Gagal melakukan mutasi', 'error');
+        })
+        .catch(() => window.toast('Gagal melakukan mutasi', 'error'))
+        .finally(() => window.setBtnLoading(btn, false));
     });
 
-    const dt = new DataTable('#barangTable', {
-        language: {
-            processing: "Memproses...",
-            lengthMenu: "Tampilkan _MENU_ data",
-            zeroRecords: "Tidak ditemukan data yang sesuai",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
-            search: "Cari:",
-            paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
-        },
-        order: [[2, 'asc']],
-        columnDefs: [{ orderable: false, targets: [0, 10] }],
-    });
+    let dt;
+    const barangTableEl = document.getElementById('barangTable');
+    if (barangTableEl && !barangTableEl.querySelector('td[colspan]') && barangTableEl.querySelectorAll('tbody tr').length) {
+        dt = new DataTable('#barangTable', {
+            language: {
+                processing: "Memproses...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ditemukan data yang sesuai",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ data keseluruhan)",
+                search: "Cari:",
+                paginate: { first: "Awal", previous: "Sebelumnya", next: "Selanjutnya", last: "Akhir" }
+            },
+            order: [[2, 'asc']],
+            columnDefs: [{ orderable: false, targets: [0, 10] }],
+        });
+        dt.on('draw', function() { syncCheckboxUI(); });
+    }
 
     document.getElementById('filterKategori')?.addEventListener('change', function() {
+        if (!dt) return;
         const text = this.options[this.selectedIndex]?.text || '';
         dt.column(4).search(this.value ? text : '').draw();
     });
 
     document.getElementById('filterLokasi')?.addEventListener('change', function() {
+        if (!dt) return;
         const text = this.options[this.selectedIndex]?.text || '';
         dt.column(5).search(this.value ? text : '').draw();
     });
