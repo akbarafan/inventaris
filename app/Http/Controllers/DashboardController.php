@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Barang;
-use App\Models\ScanLog;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -14,25 +13,38 @@ class DashboardController extends Controller
         $totalBaik = Barang::sum('baik');
         $totalRusak = Barang::sum('rusak');
         $totalRusakBerat = Barang::sum('rusak_berat');
-        $scanHariIni = ScanLog::whereDate('created_at', today())->count();
-        $barangHampirHabis = Barang::where('jumlah', '<', 5)->get();
-        $barangTerbaru = Barang::latest()->take(5)->get();
-        $scanTerbaru = ScanLog::with('barang', 'user')->latest()->take(5)->get();
-        $chartRaw = ScanLog::selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-            ->groupBy('date')
-            ->orderBy('date')
-            ->pluck('count', 'date');
-        $chartData = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $chartData[] = $chartRaw[$date] ?? 0;
-        }
+        $totalJenis = Barang::count();
+
+        $kondisiData = [
+            'baik' => (int) $totalBaik,
+            'rusak' => (int) $totalRusak,
+            'rusak_berat' => (int) $totalRusakBerat,
+        ];
+        $pctBaik = $totalBarang > 0 ? round($totalBaik / $totalBarang * 100) : 0;
+
+        $perLokasi = Barang::selectRaw('lokasis.nama_lokasi as nama, lokasis.kode as kode, COALESCE(SUM(barangs.jumlah),0) as total')
+            ->leftJoin('lokasis', 'barangs.lokasi_id', '=', 'lokasis.id')
+            ->groupBy('lokasis.id', 'lokasis.nama_lokasi', 'lokasis.kode')
+            ->orderByDesc('total')
+            ->get()
+            ->filter(fn ($r) => $r->nama)
+            ->values();
+
+        $perluPerhatian = Barang::with('lokasi', 'kategori')
+            ->where(function ($q) { $q->where('rusak', '>', 0)->orWhere('rusak_berat', '>', 0); })
+            ->orderByDesc('rusak_berat')
+            ->orderByDesc('rusak')
+            ->take(6)
+            ->get();
+
+        $barangTerbaru = Barang::with('kategori', 'lokasi')->latest()->take(5)->get();
+        $aktivitasTerbaru = ActivityLog::with('user')->latest()->take(8)->get();
 
         return view('dashboard.index', compact(
             'totalBarang', 'totalBaik', 'totalRusak', 'totalRusakBerat',
-            'scanHariIni', 'barangHampirHabis',
-            'barangTerbaru', 'scanTerbaru', 'chartData'
+            'totalJenis', 'kondisiData', 'pctBaik',
+            'perLokasi', 'perluPerhatian',
+            'barangTerbaru', 'aktivitasTerbaru'
         ));
     }
 }
