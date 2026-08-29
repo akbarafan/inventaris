@@ -30,6 +30,10 @@
         div.dt-container .dt-length label, div.dt-container .dt-search label { font-size: 0.875rem; color: #4b5563; }
         div.dt-container .dt-search { margin-bottom: 0.75rem; }
         div.dt-container .dt-length { margin-bottom: 0.75rem; }
+        .toast-enter { animation: toastIn 0.3s ease-out; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .field-error { font-size: 12px; color: #ef4444; margin-top: 4px; }
+        .input-error { border-color: #f87171 !important; box-shadow: 0 0 0 2px #fecaca !important; }
     </style>
 </head>
 <body class="h-full font-sans antialiased text-gray-900">
@@ -130,6 +134,7 @@
 
             {{-- Page Content --}}
             <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <div id="toastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
                 {{-- Flash Messages --}}
                 @if(session('success'))
                     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-6 flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
@@ -157,7 +162,61 @@
     @vite('resources/js/app.js')
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+    <div class="hidden bg-red-500 bg-amber-500 bg-green-600"></div>
     <script>
+        window.escapeHtml = function(s) {
+            if (s == null) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        };
+        window.toast = function(msg, type = 'success') {
+            const c = document.getElementById('toastContainer');
+            if (!c) return alert(msg);
+            const bg = type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#16a34a';
+            const icon = type === 'error' ? '✕' : type === 'warning' ? '⚠' : '✓';
+            const el = document.createElement('div');
+            el.className = 'toast-enter pointer-events-auto text-white text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 max-w-sm border border-white/20';
+            el.style.background = bg;
+            el.style.color = '#fff';
+            el.innerHTML = `<span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold shrink-0">${icon}</span><span class="flex-1 leading-snug">${window.escapeHtml(msg)}</span><button onclick="this.parentElement.remove()" class="opacity-70 hover:opacity-100 ml-2 text-white text-lg leading-none">&times;</button>`;
+            c.appendChild(el);
+            setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(-8px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3500);
+        };
+        window.showFieldErrors = function(errors) {
+            clearFieldErrors();
+            if (!errors) return;
+            Object.keys(errors).forEach(k => {
+                const el = document.getElementById(k + 'Error') || document.querySelector(`[data-field="${k}"]`);
+                if (el) { el.textContent = errors[k][0]; el.classList.remove('hidden'); }
+                const input = document.getElementById(k) || document.querySelector(`[name="${k}"]`);
+                if (input) input.classList.add('input-error');
+            });
+        };
+        window.clearFieldErrors = function() {
+            document.querySelectorAll('.field-error').forEach(e => { e.textContent=''; e.classList.add('hidden'); });
+            document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
+        };
+        window.setBtnLoading = function(btn, loading, text) {
+            if (!btn) return;
+            if (loading) { btn.dataset.origText = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<svg class="animate-spin w-4 h-4 inline mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>${text || 'Menyimpan...'}`; }
+            else { btn.disabled = false; btn.innerHTML = btn.dataset.origText || text || 'Simpan'; }
+        };
+        window.refreshPage = function(delay = 250) {
+            setTimeout(function() {
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.set('r', Date.now());
+                    window.location.assign(u.toString());
+                    return;
+                } catch (e) {}
+                window.location.reload();
+            }, delay);
+        };
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
+        });
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) e.target.classList.add('hidden');
+        });
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
         }
