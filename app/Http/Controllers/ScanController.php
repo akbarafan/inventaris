@@ -12,7 +12,7 @@ class ScanController extends Controller
 {
     public function index()
     {
-        $logs = ScanLog::with('barang', 'user')->latest()->get();
+        $logs = ScanLog::with('barang', 'user')->latest()->limit(100)->get();
         return view('scan.index', compact('logs'));
     }
 

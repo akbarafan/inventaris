@@ -30,8 +30,16 @@ class SettingController extends Controller
         }
 
         if ($request->hasFile('logo')) {
+            $old = Setting::get('logo');
+            if ($old) \Illuminate\Support\Facades\Storage::disk('public')->delete($old);
             $path = $request->file('logo')->store('settings', 'public');
             Setting::set('logo', $path);
+        }
+
+        if ($request->boolean('remove_logo')) {
+            $old = Setting::get('logo');
+            if ($old) \Illuminate\Support\Facades\Storage::disk('public')->delete($old);
+            Setting::set('logo', null);
         }
 
         return redirect()->route('settings.index')->with('success', 'Pengaturan berhasil disimpan!');

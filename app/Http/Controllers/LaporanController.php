@@ -20,13 +20,21 @@ class LaporanController extends Controller
 
     public function exportBarang(Request $request)
     {
+        $request->validate([
+            'kondisi' => 'nullable|in:baik,rusak,rusak_berat',
+            'kategori_id' => 'nullable|integer|exists:kategoris,id',
+            'sumber_id' => 'nullable|integer|exists:sumbers,id',
+            'start_date' => 'nullable|date|before_or_equal:today',
+            'end_date' => 'nullable|date|before_or_equal:today|after_or_equal:start_date',
+        ]);
+
         $kondisi = $request->input('kondisi');
         $kategoriId = $request->input('kategori_id');
         $sumberId = $request->input('sumber_id');
         $start = $request->input('start_date');
         $end = $request->input('end_date');
 
-        $query = Barang::with('kategori', 'sumber');
+        $query = Barang::with('kategori', 'sumber', 'lokasi');
 
         if ($kondisi && in_array($kondisi, ['baik', 'rusak', 'rusak_berat'])) {
             $query->where($kondisi, '>', 0);
@@ -48,7 +56,7 @@ class LaporanController extends Controller
             $query->whereDate('tanggal_masuk', '<=', $end);
         }
 
-        $barangs = $query->get();
+        $barangs = $query->cursor();
 
         $headings = [
             'Kode Barang',

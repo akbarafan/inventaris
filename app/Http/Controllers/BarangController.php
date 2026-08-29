@@ -44,13 +44,14 @@ class BarangController extends Controller
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'required|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
-            'tanggal_masuk' => 'nullable|date',
-            'jumlah' => 'required|integer|min:1',
-            'baik' => 'required|integer|min:0',
-            'rusak' => 'required|integer|min:0',
-            'rusak_berat' => 'required|integer|min:0',
-            'keterangan' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
+            'tanggal_masuk' => 'nullable|date|before_or_equal:today',
+            'jumlah' => 'required|integer|min:1|max:99999',
+            'baik' => 'required|integer|min:0|max:99999',
+            'rusak' => 'required|integer|min:0|max:99999',
+            'rusak_berat' => 'required|integer|min:0|max:99999',
+            'keterangan' => 'nullable|string|max:1000',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'kode_barang' => 'nullable|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
         ]);
 
         if ($validated['baik'] + $validated['rusak'] + $validated['rusak_berat'] != $validated['jumlah']) {
@@ -115,14 +116,14 @@ class BarangController extends Controller
             'kategori_id' => 'nullable|exists:kategoris,id',
             'lokasi_id' => 'nullable|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
-            'tanggal_masuk' => 'nullable|date',
-            'jumlah' => 'required|integer|min:0',
-            'baik' => 'required|integer|min:0',
-            'rusak' => 'required|integer|min:0',
-            'rusak_berat' => 'required|integer|min:0',
-            'keterangan' => 'nullable|string',
-            'kode_barang' => 'nullable|string|max:50',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
+            'tanggal_masuk' => 'nullable|date|before_or_equal:today',
+            'jumlah' => 'required|integer|min:0|max:99999',
+            'baik' => 'required|integer|min:0|max:99999',
+            'rusak' => 'required|integer|min:0|max:99999',
+            'rusak_berat' => 'required|integer|min:0|max:99999',
+            'keterangan' => 'nullable|string|max:1000',
+            'kode_barang' => 'nullable|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
         ]);
 
         if ($validated['baik'] + $validated['rusak'] + $validated['rusak_berat'] != $validated['jumlah']) {
@@ -174,10 +175,10 @@ class BarangController extends Controller
     {
         $validated = $request->validate([
             'lokasi_tujuan' => 'required|integer|exists:lokasis,id',
-            'jumlah' => 'required|integer|min:1',
-            'baik' => 'nullable|integer|min:0',
-            'rusak' => 'nullable|integer|min:0',
-            'rusak_berat' => 'nullable|integer|min:0',
+            'jumlah' => 'required|integer|min:1|max:99999',
+            'baik' => 'nullable|integer|min:0|max:99999',
+            'rusak' => 'nullable|integer|min:0|max:99999',
+            'rusak_berat' => 'nullable|integer|min:0|max:99999',
             'keterangan' => 'nullable|string|max:255',
         ]);
 
@@ -309,7 +310,9 @@ class BarangController extends Controller
 
     public function printLabel(Request $request)
     {
-        $kodes = explode(',', $request->input('kodes', ''));
+        $request->validate(['kodes' => 'required|string|max:2000']);
+        $kodes = array_filter(array_map('trim', explode(',', $request->input('kodes', ''))));
+        if (count($kodes) > 100) $kodes = array_slice($kodes, 0, 100);
         $barangs = Barang::with('kategori', 'barangLokasis.lokasi')
             ->whereIn('kode_barang', $kodes)
             ->get();
@@ -324,24 +327,20 @@ class BarangController extends Controller
     public function importCsv(Request $request)
     {
         $request->validate([
-            'rows' => 'required|array|min:1',
+            'rows' => 'required|array|min:1|max:500',
             'rows.*.nama_barang' => 'required|string|max:255',
             'rows.*.kategori_id' => 'required|exists:kategoris,id',
-            'rows.*.jumlah' => 'required|integer|min:1',
-            'rows.*.baik' => 'required|integer|min:0',
-            'rows.*.rusak' => 'required|integer|min:0',
-            'rows.*.rusak_berat' => 'required|integer|min:0',
-            'rows.*.keterangan' => 'nullable|string',
+            'rows.*.jumlah' => 'required|integer|min:1|max:99999',
+            'rows.*.baik' => 'required|integer|min:0|max:99999',
+            'rows.*.rusak' => 'required|integer|min:0|max:99999',
+            'rows.*.rusak_berat' => 'required|integer|min:0|max:99999',
+            'rows.*.keterangan' => 'nullable|string|max:1000',
             'rows.*.sumber_id' => 'nullable|exists:sumbers,id',
-            'ruang' => 'nullable|string|max:255',
+            'lokasi_id' => 'required|exists:lokasis,id',
             'sumber_id' => 'nullable|exists:sumbers,id',
         ]);
 
-        $lokasi = null;
-        if ($request->filled('ruang')) {
-            $lokasi = Lokasi::firstOrCreate(['nama_lokasi' => $request->ruang]);
-        }
-
+        $lokasiId = (int) $request->input('lokasi_id');
         $sumberId = $request->input('sumber_id');
         $success = 0;
         $errors = [];
@@ -355,8 +354,6 @@ class BarangController extends Controller
             }
 
             try {
-                $lokasiId = $lokasi?->id;
-
                 $barang = Barang::createBarangUnique([
                     'nama_barang' => $row['nama_barang'],
                     'kategori_id' => $row['kategori_id'],
@@ -370,16 +367,14 @@ class BarangController extends Controller
                     'keterangan' => $row['keterangan'] ?? null,
                 ]);
 
-                if ($lokasiId) {
-                    BarangLokasi::create([
-                        'barang_id' => $barang->id,
-                        'lokasi_id' => $lokasiId,
-                        'jumlah' => $row['jumlah'],
-                        'baik' => $row['baik'],
-                        'rusak' => $row['rusak'],
-                        'rusak_berat' => $row['rusak_berat'],
-                    ]);
-                }
+                BarangLokasi::create([
+                    'barang_id' => $barang->id,
+                    'lokasi_id' => $lokasiId,
+                    'jumlah' => $row['jumlah'],
+                    'baik' => $row['baik'],
+                    'rusak' => $row['rusak'],
+                    'rusak_berat' => $row['rusak_berat'],
+                ]);
 
                 $success++;
             } catch (\Exception $e) {
