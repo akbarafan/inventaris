@@ -16,7 +16,7 @@ class Barang extends Model
     protected $fillable = [
         'kode_barang', 'nama_barang', 'kategori_id', 'lokasi_id', 'sumber_id', 'satuan_id',
         'foto', 'jumlah', 'baik', 'rusak', 'rusak_berat',
-        'keterangan', 'tanggal_masuk',
+        'keterangan', 'tanggal_masuk', 'tracking_mode',
     ];
 
     protected $casts = [
@@ -29,6 +29,7 @@ class Barang extends Model
         'lokasi_id' => 'integer',
         'sumber_id' => 'integer',
         'satuan_id' => 'integer',
+        'tracking_mode' => 'string',
     ];
 
     public function kategori()
@@ -59,6 +60,11 @@ class Barang extends Model
     public function scanLogs()
     {
         return $this->hasMany(ScanLog::class, 'barang_id');
+    }
+
+    public function units()
+    {
+        return $this->hasMany(BarangUnit::class, 'barang_id');
     }
 
     public static function kodeBarangBase($lokasi, $kategori, $namaBarang = '')
@@ -147,7 +153,7 @@ class Barang extends Model
         $result = '';
         foreach ($words as $w) {
             $first = mb_substr(trim($w), 0, 1);
-            if (!empty($first)) {
+            if ($first !== '' && preg_match('/[A-Za-z0-9]/', $first)) {
                 $result .= mb_strtoupper($first);
                 if (mb_strlen($result) >= 5) break;
             }

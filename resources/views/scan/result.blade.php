@@ -21,7 +21,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <div class="flex items-start justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">Informasi Barang</h3>
-                    <span class="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded">{{ $barang->kode_barang }}</span>
+                    <span class="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded">{{ $unit?->kode_unit ?? $barang->kode_barang }}</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -100,8 +100,8 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center sticky top-24">
                 <h3 class="text-sm font-semibold text-gray-700 mb-4">QR Code</h3>
-                {!! $barang->generateQrSvg(200, true) !!}
-                <p class="text-xs text-gray-400 mt-2 font-mono">{{ $barang->kode_barang }}</p>
+                {!! ($unit ? $unit->generateQrSvg(200, true) : $barang->generateQrSvg(200, true)) !!}
+                <p class="text-xs text-gray-400 mt-2 font-mono">{{ $unit?->kode_unit ?? $barang->kode_barang }}</p>
                 <div class="mt-4">
                     <a href="{{ url('/scan') }}" class="btn-secondary text-sm px-4 py-2 w-full block text-center">Scan Lagi</a>
                 </div>

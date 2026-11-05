@@ -70,4 +70,5 @@ Route::middleware('auth')->group(function () {
 
 Route::get('info', [BarangController::class, 'info']);
 Route::get('b/{kode}', [BarangController::class, 'publicDetail'])->name('barang.public');
+Route::get('u/{kode}', [BarangController::class, 'publicUnit'])->name('barang.unit.public');
 Route::get('scan/{kode}', [ScanController::class, 'scan'])->name('scan.scan');

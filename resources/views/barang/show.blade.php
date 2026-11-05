@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $unit = $barang->units()->where('status', 'aktif')->orderBy('nomor_urut')->first();
+@endphp
 <div class="space-y-6">
     <div class="flex items-center gap-3">
         <a href="{{ route('barang.index') }}" class="btn-secondary text-sm px-4 py-2">
@@ -100,10 +103,10 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center sticky top-24">
                 <h3 class="text-sm font-semibold text-gray-700 mb-4">QR Code</h3>
-                {!! $barang->generateQrSvg(200, true) !!}
-                <p class="text-xs text-gray-400 mt-2 font-mono">{{ $barang->kode_barang }}</p>
+                {!! ($unit ? $unit->generateQrSvg(200, true) : $barang->generateQrSvg(200, true)) !!}
+                <p class="text-xs text-gray-400 mt-2 font-mono">{{ $unit?->kode_unit ?? $barang->kode_barang }}</p>
                 <div class="mt-4 space-y-2">
-                    <a href="{{ route('barang.qr', $barang->kode_barang) }}" class="btn-outline text-sm px-4 py-2 w-full block text-center">Download QR</a>
+                    <a href="{{ route('barang.qr', $unit?->kode_unit ?? $barang->kode_barang) }}" class="btn-outline text-sm px-4 py-2 w-full block text-center">Download QR</a>
                     <a href="{{ route('barang.print-label', ['kodes' => $barang->kode_barang]) }}" target="_blank" class="btn-outline text-sm px-4 py-2 w-full block text-center">Cetak Label</a>
                     <a href="{{ route('barang.edit', $barang->id) }}" class="btn-primary text-sm px-4 py-2 w-full block text-center">Edit Barang</a>
                 </div>

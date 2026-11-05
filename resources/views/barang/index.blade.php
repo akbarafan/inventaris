@@ -79,7 +79,7 @@
                         <td class="px-4 py-3"><span class="badge-rusakberat">{{ $b->rusak_berat }}</span></td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-center gap-1">
-                                <a href="/barang/{{ $b->kode_barang }}/qr" target="_blank" class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Download QR">
+                                <a href="/barang/{{ $b->units()->where('status', 'aktif')->orderBy('nomor_urut')->first()?->kode_unit ?? $b->kode_barang }}/qr" target="_blank" class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Download QR">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 16a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm10-1a1 1 0 00-1 1v1h-1a1 1 0 000 2h1v1a1 1 0 002 0v-1h1a1 1 0 000-2h-1v-1a1 1 0 00-1-1z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13v4m-2-2h4"/></svg>
                                 </a>
                                 <button onclick="detailBarang({{ $b->id }})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Detail">
@@ -177,6 +177,14 @@
                         @endforeach
                     </select>
                     <p id="satuan_idError" class="field-error hidden"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mode Pelacakan</label>
+                    <select id="trackingModeBarang" class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="bulk">Stok / Bulk (1 QR per barang)</option>
+                        <option value="unit">Per Unit (1 QR per unit)</option>
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Mode unit membuat QR dan label mengikuti unit fisik.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
@@ -476,6 +484,7 @@
         fd.append('tanggal_masuk', document.getElementById('tanggalMasuk').value);
         fd.append('lokasi_id', document.getElementById('lokasiBarang').value);
         fd.append('satuan_id', document.getElementById('satuanBarang').value);
+        fd.append('tracking_mode', document.getElementById('trackingModeBarang').value);
         fd.append('keterangan', document.getElementById('keteranganBarang').value);
         fd.append('jumlah', total);
         fd.append('baik', parseInt(document.getElementById('kondisiBaik').value) || 0);
@@ -524,6 +533,7 @@
             document.getElementById('tanggalMasuk').value = data.tanggal_masuk?.split(' ')[0] || '';
             document.getElementById('lokasiBarang').value = data.lokasi_id || data.barang_lokasis?.[0]?.lokasi_id || '';
             document.getElementById('satuanBarang').value = data.satuan_id || '';
+            document.getElementById('trackingModeBarang').value = data.tracking_mode || 'bulk';
             document.getElementById('keteranganBarang').value = data.keterangan || '';
             document.getElementById('kondisiBaik').value = data.baik || 0;
             document.getElementById('kondisiRusak').value = data.rusak || 0;
@@ -552,6 +562,7 @@
         document.getElementById('fotoPreview').classList.add('hidden');
         hitungTotalKondisi();
         previewKode();
+        document.getElementById('trackingModeBarang').value = 'bulk';
     }
 
     function detailBarang(id) {

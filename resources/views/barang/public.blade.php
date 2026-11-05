@@ -31,8 +31,8 @@
         </div>
 
         <div style="text-align:center;margin-bottom:20px;">
-            {!! $barang->generateQrSvg(120, true) !!}
-            <p style="font-size:11px;color:#94a3b8;margin-top:6px;font-family:monospace;">{{ $barang->kode_barang }}</p>
+            {!! ($unit ? $unit->generateQrSvg(120, true) : $barang->generateQrSvg(120, true)) !!}
+            <p style="font-size:11px;color:#94a3b8;margin-top:6px;font-family:monospace;">{{ $unit?->kode_unit ?? $barang->kode_barang }}</p>
         </div>
 
         <div style="border-top:1px solid #E2E8F0;padding-top:20px;">
@@ -41,7 +41,7 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
                     <div class="label">Kode</div>
-                    <div class="value" style="font-family:monospace;">{{ $barang->kode_barang }}</div>
+                    <div class="value" style="font-family:monospace;">{{ $unit?->kode_unit ?? $barang->kode_barang }}</div>
                 </div>
                 <div>
                     <div class="label">Kategori</div>

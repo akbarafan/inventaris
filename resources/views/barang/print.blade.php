@@ -9,185 +9,290 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            background: #fff;
-            padding: 10px;
+            background: #eef2f7;
+            padding: 24px 12px;
+            color: #0f172a;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
+
         .label-card {
             width: 100mm;
-            min-height: 80mm;
-            border: 1.5px solid #0f172a;
-            border-radius: 6px;
-            padding: 14px 16px;
-            margin: 0 auto 8px;
-            page-break-after: always;
+            height: 80mm;
+            background: #fff;
+            border: 1px solid #0f172a;
+            border-radius: 4mm;
+            padding: 4mm;
+            margin: 0 auto 10px;
             display: flex;
             flex-direction: column;
+            page-break-after: always;
+            break-after: page;
+            overflow: hidden;
             position: relative;
         }
-        .header {
+
+        /* ---------- Header ---------- */
+        .label-head {
             display: flex;
             align-items: center;
-            gap: 10px;
-            border-bottom: 1.5px solid #0f172a;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
+            gap: 2.5mm;
+            padding-bottom: 2mm;
+            border-bottom: 0.8mm solid #0f172a;
         }
-        .header img {
-            width: 36px;
-            height: 36px;
+        .label-head img {
+            width: 8.5mm;
+            height: 8.5mm;
             border-radius: 50%;
             object-fit: contain;
             flex-shrink: 0;
         }
-        .header-text {
-            flex: 1;
-        }
-        .header-text .school {
-            font-size: 14px;
-            font-weight: 800;
-            color: #0f172a;
-            line-height: 1.2;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-        }
-        .header-text .title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #2563eb;
-            line-height: 1.2;
-            letter-spacing: 0.05em;
-        }
-        .asset-section {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 6px;
-            padding: 4px 0;
-        }
-        .asset-id-area {
+        .head-text {
             flex: 1;
             min-width: 0;
         }
-        .asset-id-label {
-            font-size: 9px;
+        .head-text .school {
+            font-size: 8.2pt;
+            font-weight: 800;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .head-text .title {
+            font-size: 6.4pt;
+            font-weight: 700;
+            color: #2563eb;
+            line-height: 1.2;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .head-badge {
+            flex-shrink: 0;
+            font-size: 5.6pt;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #fff;
+            background: #0f172a;
+            border-radius: 1mm;
+            padding: 1mm 1.8mm;
+            text-transform: uppercase;
+        }
+
+        /* ---------- ID aset ---------- */
+        .id-block {
+            padding: 1.6mm 0 0.8mm;
+            border-bottom: 0.4mm dashed #cbd5e1;
+        }
+        .id-block .caption {
+            font-size: 5.8pt;
             font-weight: 700;
             color: #64748b;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
         }
-        .asset-id-value {
-            font-size: 17px;
-            font-weight: 800;
-            color: #0f172a;
-            font-family: monospace;
-            letter-spacing: 0.02em;
+        .id-value {
+            font-family: 'Courier New', ui-monospace, monospace;
+            font-size: 15pt;
+            font-weight: 700;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
         }
-        .barcode-box {
-            flex-shrink: 0;
-            text-align: center;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 4px 8px;
-            background: #fff;
+
+        /* ---------- Barcode ---------- */
+        .barcode-wrap {
+            height: 13mm;
+            margin-top: 1.2mm;
+            padding: 0.6mm 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
         .barcode {
-            font-family: 'Libre Barcode 39', cursive;
-            font-size: 38px;
+            font-family: 'Libre Barcode 39', 'Libre Barcode 39 Extended', cursive;
+            font-size: 34pt;
             line-height: 1;
+            white-space: nowrap;
             color: #0f172a;
-            margin-bottom: -2px;
         }
-        .barcode-type {
-            font-size: 7px;
+        .barcode-caption {
+            text-align: center;
+            font-size: 5.2pt;
+            font-weight: 700;
+            letter-spacing: 0.18em;
             color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            margin-top: -0.5mm;
         }
-        .details-section {
-            display: flex;
-            gap: 12px;
+
+        /* ---------- Body ---------- */
+        .label-body {
             flex: 1;
-            border-top: 1.5px solid #0f172a;
-            padding-top: 8px;
-            margin-top: auto;
+            display: flex;
+            gap: 3mm;
+            margin-top: 2mm;
+            min-height: 0;
+            overflow: hidden;
         }
-        .metadata {
+        .meta {
             flex: 1;
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 0.6mm;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .meta .row {
+            display: flex;
+            align-items: baseline;
+            font-size: 6.8pt;
+            line-height: 1.2;
+        }
+        .meta .lbl {
+            width: 22mm;
+            flex-shrink: 0;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 5.8pt;
+            letter-spacing: 0.03em;
+        }
+        .meta .sep {
+            width: 2.5mm;
+            flex-shrink: 0;
+            color: #94a3b8;
+        }
+        .meta .val {
+            flex: 1;
+            min-width: 0;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            word-break: break-word;
+        }
+
+        .qr-panel {
+            width: 25mm;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2mm;
+        }
+        .qr-panel .qr-box {
+            width: 18mm;
+            height: 18mm;
+            flex-shrink: 0;
+            padding: 1.2mm;
+            background: #fff;
+            border: 0.25mm solid #e2e8f0;
+            border-radius: 1.5mm;
+            display: flex;
+            align-items: center;
             justify-content: center;
         }
-        .metadata .row {
-            display: flex;
-            font-size: 12px;
-            line-height: 1.3;
+        .qr-panel .qr-box svg {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
         }
-        .metadata .row .lbl {
-            font-weight: 700;
-            color: #0f172a;
-            width: 110px;
+        .qr-panel .qr-caption {
             flex-shrink: 0;
+            font-size: 5.2pt;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #2563eb;
+            text-transform: uppercase;
+            line-height: 1;
         }
-        .metadata .row .dots {
-            color: #0f172a;
-            width: 12px;
-            flex-shrink: 0;
-            text-align: center;
-        }
-        .metadata .row .val {
-            font-weight: 600;
-            color: #0f172a;
-            word-break: break-all;
-            flex: 1;
-        }
-        .status-dot {
+
+        /* ---------- Kondisi ---------- */
+        .dot {
             display: inline-block;
-            width: 9px;
-            height: 9px;
+            width: 1.8mm;
+            height: 1.8mm;
             border-radius: 50%;
-            margin-right: 2px;
+            margin-right: 1.2mm;
             vertical-align: middle;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .status-dot.green { background: #22c55e; }
-        .status-dot.orange { background: #f59e0b; }
-        .status-dot.red { background: #ef4444; }
-        .qr-wrap {
+        .dot.green { background: #22c55e; }
+        .dot.orange { background: #f59e0b; }
+        .dot.red { background: #ef4444; }
+
+        /* ---------- Footer ---------- */
+        .label-foot {
             flex-shrink: 0;
-            text-align: center;
-            width: 80px;
+            position: relative;
+            z-index: 1;
+            background: #fff;
+            margin-top: 2mm;
+            padding-top: 1.5mm;
+            border-top: 0.3mm solid #e2e8f0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            gap: 2mm;
+            font-size: 5pt;
+            font-weight: 600;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
         }
-        .qr-wrap svg {
-            width: 72px;
-            height: 72px;
-            display: block;
-        }
-        .qr-text {
-            font-size: 8px;
-            font-weight: 700;
-            color: #2563eb;
-            letter-spacing: 0.05em;
-            margin-top: 2px;
-        }
+        .label-foot .right { white-space: nowrap; }
+
         @media print {
-            body { padding: 0; }
-            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { padding: 0; background: #fff; }
+            .print-toolbar { display: none !important; }
             .label-card {
-                border: 1.5px solid #0f172a;
-                margin: 0 auto;
-                page-break-after: always;
+                margin: 0;
+                border-radius: 4mm;
                 box-shadow: none;
             }
-            .label-card:last-child { page-break-after: avoid; }
+            .label-card:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
         }
+
+        /* ---------- Screen toolbar ---------- */
+        .print-toolbar {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0f172a;
+            color: #fff;
+            padding: 8px 10px 8px 14px;
+            border-radius: 999px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 50;
+        }
+        .print-toolbar button {
+            border: 0;
+            cursor: pointer;
+            background: #2563eb;
+            color: #fff;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 999px;
+        }
+        .print-toolbar button:hover { background: #1d4ed8; }
+
         @page {
             size: 100mm 80mm;
             margin: 0;
@@ -195,73 +300,131 @@
     </style>
 </head>
 <body>
-    @foreach($barangs as $barang)
+    <div class="print-toolbar">
+        <span>{{ $labels->count() }} label &middot; 100 &times; 80 mm</span>
+        <button type="button" onclick="window.print()">Cetak</button>
+    </div>
+
+    @foreach($labels as $label)
+    @php
+        $kondisi = $label['baik'] > 0 ? 'baik' : ($label['rusak'] > 0 ? 'rusak' : 'rusak_berat');
+    @endphp
     <div class="label-card">
-        <div class="header">
+        <div class="label-head">
             @php $brandLogo = $settings['logo'] ?? ''; @endphp
             <img src="{{ $brandLogo ? asset('storage/' . $brandLogo) : asset('images/logo-smk.png') }}" alt="Logo">
-            <div class="header-text">
+            <div class="head-text">
                 <div class="school">{{ strtoupper($settings['nama_sekolah'] ?? 'SMK Labschool UNESA 1 Surabaya') }}</div>
-                <div class="title">INVENTARIS {{ strtoupper($settings['nama_singkat'] ?? 'SMK') }}</div>
+                <div class="title">Inventaris {{ strtoupper($settings['nama_singkat'] ?? 'SMK') }}</div>
             </div>
+            <div class="head-badge">{{ $label['is_unit'] ? 'Unit Aset' : 'Aset' }}</div>
         </div>
 
-        <div class="asset-section">
-            <div class="asset-id-area">
-                <div class="asset-id-label">ID ASET</div>
-                <div class="asset-id-value">{{ $barang->kode_barang }}</div>
-            </div>
-            <div class="barcode-box">
-                <div class="barcode">*{{ $barang->kode_barang }}*</div>
-                <div class="barcode-type">Code 39</div>
-            </div>
+        <div class="id-block">
+            <div class="caption">ID Aset</div>
+            <div class="id-value" data-fit>{{ $label['kode'] }}</div>
         </div>
 
-        <div class="details-section">
-            <div class="metadata">
+        <div class="barcode-wrap">
+            <span class="barcode" data-fit-barcode>*{{ $label['kode'] }}*</span>
+        </div>
+        <div class="barcode-caption">Code 39</div>
+
+        <div class="label-body">
+            <div class="meta">
                 <div class="row">
-                    <span class="lbl">NAMA</span>
-                    <span class="dots">:</span>
-                    <span class="val">{{ strtoupper($barang->nama_barang) }}</span>
+                    <span class="lbl">Nama</span>
+                    <span class="sep">:</span>
+                    <span class="val">{{ strtoupper($label['nama']) }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">JUMLAH</span>
-                    <span class="dots">:</span>
-                    <span class="val">{{ $barang->jumlah }} {{ $barang->satuan->nama_satuan ?? 'pcs' }}{{ ($barang->baik > 0) ? ' - BAIK' : '' }}{{ ($barang->rusak > 0) ? ' - PB' : '' }}{{ ($barang->rusak_berat > 0) ? ' - RB' : '' }}</span>
+                    <span class="lbl">Jumlah</span>
+                    <span class="sep">:</span>
+                    <span class="val">{{ $label['jumlah'] }} {{ $label['satuan'] ?? 'pcs' }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">LOKASI</span>
-                    <span class="dots">:</span>
-                    <span class="val">{{ strtoupper($barang->barangLokasis->first()->lokasi->nama_lokasi ?? $barang->lokasi->nama_lokasi ?? '-') }}</span>
+                    <span class="lbl">Lokasi</span>
+                    <span class="sep">:</span>
+                    <span class="val">{{ strtoupper($label['lokasi']) }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">TGL PEROLEHAN</span>
-                    <span class="dots">:</span>
-                    <span class="val">{{ $barang->tanggal_masuk ? strtoupper(\Carbon\Carbon::parse($barang->tanggal_masuk)->locale('id')->isoFormat('D MMM Y')) : '-' }}</span>
+                    <span class="lbl">Perolehan</span>
+                    <span class="sep">:</span>
+                    <span class="val">{{ $label['tanggal_masuk'] ? strtoupper(\Carbon\Carbon::parse($label['tanggal_masuk'])->locale('id')->isoFormat('D MMM Y')) : '-' }}</span>
                 </div>
                 <div class="row">
-                    <span class="lbl">KONDISI</span>
-                    <span class="dots">:</span>
+                    <span class="lbl">Kondisi</span>
+                    <span class="sep">:</span>
                     <span class="val">
-                        @if($barang->baik > 0)
-                            <span class="status-dot green"></span> BAIK
-                        @elseif($barang->rusak > 0)
-                            <span class="status-dot orange"></span> PERBAIKAN
+                        @if($kondisi === 'baik')
+                            <span class="dot green"></span>BAIK
+                        @elseif($kondisi === 'rusak')
+                            <span class="dot orange"></span>PERBAIKAN
                         @else
-                            <span class="status-dot red"></span> RUSAK BERAT
+                            <span class="dot red"></span>RUSAK BERAT
                         @endif
                     </span>
                 </div>
             </div>
-            <div class="qr-wrap">
-                {!! $barang->generateQrSvg(64, true) !!}
-                <div class="qr-text">SCAN QR</div>
+
+            <div class="qr-panel">
+                <div class="qr-box">{!! $label['qr_svg'] !!}</div>
+                <div class="qr-caption">Scan QR</div>
             </div>
+        </div>
+
+        <div class="label-foot">
+            <span>Aset milik sekolah &middot; dilarang memindahtangankan tanpa izin</span>
+            <span class="right">{{ strtoupper($settings['nama_singkat'] ?? 'SMK') }}</span>
         </div>
     </div>
     @endforeach
+
     <script>
-        window.onload = function() { window.print(); };
+        function fitText(el, maxPx, minPx, step) {
+            if (!el) return;
+            var size = maxPx;
+            el.style.fontSize = size + 'px';
+            var guard = 0;
+            while (el.scrollWidth > el.clientWidth && size > minPx && guard < 80) {
+                size -= step;
+                el.style.fontSize = size + 'px';
+                guard++;
+            }
+        }
+
+        function fitBarcode(el) {
+            if (!el) return;
+            var box = el.parentElement;
+            var size = 60;
+            el.style.fontSize = size + 'px';
+            var guard = 0;
+            while ((el.scrollWidth > box.clientWidth || el.scrollHeight > box.clientHeight) && size > 14 && guard < 120) {
+                size -= 1;
+                el.style.fontSize = size + 'px';
+                guard++;
+            }
+        }
+
+        function fitAll() {
+            document.querySelectorAll('[data-fit]').forEach(function (el) {
+                fitText(el, 28, 10, 0.5);
+            });
+            document.querySelectorAll('[data-fit-barcode]').forEach(fitBarcode);
+        }
+
+        function ready() {
+            fitAll();
+            window.print();
+        }
+
+        window.addEventListener('load', function () {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(ready).catch(ready);
+            } else {
+                ready();
+            }
+        });
     </script>
 </body>
 </html>

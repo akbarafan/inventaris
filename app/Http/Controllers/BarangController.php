@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Barang;
 use App\Models\BarangLokasi;
+use App\Models\BarangUnit;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Sumber;
+use App\Services\BarangUnitService;
 use App\Support\ServerInfo;
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
@@ -54,6 +56,7 @@ class BarangController extends Controller
             'keterangan' => 'nullable|string|max:1000',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
             'kode_barang' => 'nullable|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
+            'tracking_mode' => 'nullable|in:bulk,unit',
         ]);
 
         if ($validated['baik'] + $validated['rusak'] + $validated['rusak_berat'] != $validated['jumlah']) {
@@ -90,6 +93,17 @@ class BarangController extends Controller
                 'rusak' => $validated['rusak'],
                 'rusak_berat' => $validated['rusak_berat'],
             ]);
+
+            if (($validated['tracking_mode'] ?? 'bulk') === 'unit') {
+                $barang->tracking_mode = 'unit';
+                BarangUnitService::createUnits($barang, (int) $validated['jumlah'], (int) $validated['lokasi_id'], [
+                    'baik' => (int) $validated['baik'],
+                    'rusak' => (int) $validated['rusak'],
+                    'rusak_berat' => (int) $validated['rusak_berat'],
+                ]);
+
+                BarangUnitService::syncAggregatesFromUnits($barang);
+            }
         });
 
         return response()->json(['success' => true, 'message' => 'Barang berhasil ditambahkan!']);
@@ -129,6 +143,7 @@ class BarangController extends Controller
             'keterangan' => 'nullable|string|max:1000',
             'kode_barang' => 'nullable|string|max:50|regex:/^[A-Za-z0-9\-]+$/',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'tracking_mode' => 'nullable|in:bulk,unit',
         ]);
 
         if ($validated['baik'] + $validated['rusak'] + $validated['rusak_berat'] != $validated['jumlah']) {
@@ -136,6 +151,22 @@ class BarangController extends Controller
         }
 
         $barang = Barang::findOrFail($id);
+
+        $oldTrackingMode = $barang->tracking_mode ?? 'bulk';
+        $requestedTrackingMode = $validated['tracking_mode'] ?? $oldTrackingMode;
+
+        if ($oldTrackingMode === 'unit' && $requestedTrackingMode === 'bulk') {
+            return response()->json(['success' => false, 'message' => 'Barang dengan mode unit tidak bisa dikembalikan ke mode bulk.'], 422);
+        }
+
+        if ($oldTrackingMode === 'unit' && $requestedTrackingMode === 'unit') {
+            if ((int) $validated['jumlah'] !== (int) $barang->jumlah
+                || (int) $validated['baik'] !== (int) $barang->baik
+                || (int) $validated['rusak'] !== (int) $barang->rusak
+                || (int) $validated['rusak_berat'] !== (int) $barang->rusak_berat) {
+                return response()->json(['success' => false, 'message' => 'Mode unit tidak memungkinkan perubahan jumlah dan kondisi langsung.'], 422);
+            }
+        }
 
         if ($request->filled('kode_barang') && $request->kode_barang !== $barang->kode_barang) {
             $existing = Barang::where('kode_barang', $request->kode_barang)
@@ -154,6 +185,29 @@ class BarangController extends Controller
 
         $barang->fill($validated);
         $barang->save();
+
+        if ($oldTrackingMode === 'bulk' && $requestedTrackingMode === 'unit') {
+            $barangLokasi = BarangLokasi::where('barang_id', $barang->id)
+                ->where('lokasi_id', $validated['lokasi_id'])
+                ->first();
+
+            if (!$barangLokasi) {
+                $barangLokasi = new BarangLokasi();
+            }
+
+            $barangLokasi->barang_id = $barang->id;
+            $barangLokasi->lokasi_id = $validated['lokasi_id'];
+            $barangLokasi->jumlah = $validated['jumlah'];
+            $barangLokasi->baik = $validated['baik'];
+            $barangLokasi->rusak = $validated['rusak'];
+            $barangLokasi->rusak_berat = $validated['rusak_berat'];
+            $barangLokasi->save();
+
+            DB::transaction(function () use ($barang) {
+                BarangUnitService::convertToUnit($barang);
+                BarangUnitService::syncAggregatesFromUnits($barang);
+            });
+        }
 
         return response()->json(['success' => true, 'message' => 'Barang berhasil diperbarui!']);
     }
@@ -186,6 +240,10 @@ class BarangController extends Controller
             'rusak_berat' => 'nullable|integer|min:0|max:99999',
             'keterangan' => 'nullable|string|max:255',
         ]);
+
+        if (($barang->tracking_mode ?? 'bulk') === 'unit') {
+            return response()->json(['success' => false, 'message' => 'Barang dengan mode unit tidak bisa dimutasi melalui jumlah agregat.'], 422);
+        }
 
         $lokasiTujuan = (int) $validated['lokasi_tujuan'];
         $jumlah = (int) $validated['jumlah'];
@@ -294,11 +352,36 @@ class BarangController extends Controller
         $barang = Barang::with('kategori', 'sumber', 'barangLokasis.lokasi')
             ->where('kode_barang', $kode)
             ->firstOrFail();
-        return view('barang.public', compact('barang'));
+        return view('barang.public', ['barang' => $barang, 'unit' => null]);
+    }
+
+    public function publicUnit($kode)
+    {
+        $unit = BarangUnit::where('kode_unit', $kode)->firstOrFail();
+        $barang = Barang::with('kategori', 'sumber', 'barangLokasis.lokasi')
+            ->where('id', $unit->barang_id)
+            ->firstOrFail();
+
+        return view('barang.public', ['barang' => $barang, 'unit' => $unit]);
     }
 
     public function downloadQR($kode)
     {
+        $unit = BarangUnit::where('kode_unit', $kode)->first();
+
+        if ($unit) {
+            $renderer = new ImageRenderer(
+                new RendererStyle(400),
+                new SvgImageBackEnd()
+            );
+            $qrData = url('/u/' . $unit->kode_unit);
+            $svg = $renderer->render(Encoder::encode($qrData, ErrorCorrectionLevel::L()));
+
+            return response($svg, 200)
+                ->header('Content-Type', 'image/svg+xml')
+                ->header('Content-Disposition', 'attachment; filename="QR-' . $unit->kode_unit . '.svg"');
+        }
+
         $barang = Barang::where('kode_barang', $kode)->firstOrFail();
 
         $renderer = new ImageRenderer(
@@ -320,13 +403,72 @@ class BarangController extends Controller
         if (count($kodes) > 100) $kodes = array_slice($kodes, 0, 100);
         $barangs = Barang::with('kategori', 'barangLokasis.lokasi')
             ->whereIn('kode_barang', $kodes)
-            ->get();
+            ->get()
+            ->keyBy('kode_barang');
 
-        if ($barangs->isEmpty()) {
+        $labels = collect();
+        $maxLabels = 300;
+
+        foreach ($kodes as $kode) {
+            if ($labels->count() >= $maxLabels) {
+                break;
+            }
+
+            $kode = trim($kode);
+            if ($kode === '') {
+                continue;
+            }
+
+            $barang = $barangs[$kode] ?? null;
+            if (!$barang) {
+                continue;
+            }
+
+            if (($barang->tracking_mode ?? 'bulk') === 'unit') {
+                $units = $barang->units()
+                    ->with('lokasi')
+                    ->where('status', 'aktif')
+                    ->orderBy('nomor_urut')
+                    ->limit(min(100, $maxLabels - $labels->count()))
+                    ->get();
+
+                foreach ($units as $unit) {
+                    $labels->push([
+                        'is_unit' => true,
+                        'kode' => $unit->kode_unit,
+                        'nama' => $barang->nama_barang,
+                        'jumlah' => 1,
+                        'baik' => $unit->kondisi === 'baik' ? 1 : 0,
+                        'rusak' => $unit->kondisi === 'rusak' ? 1 : 0,
+                        'rusak_berat' => $unit->kondisi === 'rusak_berat' ? 1 : 0,
+                        'lokasi' => $unit->lokasi?->nama_lokasi ?? $barang->lokasi?->nama_lokasi ?? '-',
+                        'tanggal_masuk' => $barang->tanggal_masuk,
+                        'satuan' => $barang->satuan?->nama_satuan ?? 'pcs',
+                        'qr_svg' => $unit->generateQrSvg(64, true),
+                    ]);
+                }
+            } else {
+                $labels->push([
+                    'is_unit' => false,
+                    'kode' => $barang->kode_barang,
+                    'nama' => $barang->nama_barang,
+                    'jumlah' => $barang->jumlah,
+                    'baik' => $barang->baik,
+                    'rusak' => $barang->rusak,
+                    'rusak_berat' => $barang->rusak_berat,
+                    'lokasi' => $barang->barangLokasis?->first()?->lokasi?->nama_lokasi ?? $barang->lokasi?->nama_lokasi ?? '-',
+                    'tanggal_masuk' => $barang->tanggal_masuk,
+                    'satuan' => $barang->satuan?->nama_satuan ?? 'pcs',
+                    'qr_svg' => $barang->generateQrSvg(64, true),
+                ]);
+            }
+        }
+
+        if ($labels->isEmpty()) {
             return redirect()->back()->with('error', 'Barang tidak ditemukan.');
         }
 
-        return view('barang.print', compact('barangs'));
+        return view('barang.print', ['labels' => $labels]);
     }
 
     public function importCsv(Request $request)
